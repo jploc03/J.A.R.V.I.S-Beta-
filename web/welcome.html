@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Welcome</title><link rel="stylesheet" href="/jarvis.css"><script src="/robot.js"></script>
+<style>
+html,body{height:100%}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  background:radial-gradient(70% 60% at 50% 40%,var(--deep),var(--bg) 75%) fixed}
+.wrap{width:min(760px,92vw);display:flex;flex-direction:column;align-items:center}
+#reactor{transition:transform .6s}
+.step{display:none;width:100%;text-align:center;animation:in .45s ease-out}
+.step.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+h2{font:700 24px var(--hud);letter-spacing:3px;color:#fff;text-shadow:var(--glow);margin:14px 0 6px;text-transform:uppercase}
+.lead{font:500 18px var(--tech);color:var(--cyan2);min-height:26px;margin-bottom:18px}
+.typing::after{content:"▍";animation:blink 1s steps(1) infinite;color:var(--cyan)}
+@keyframes blink{50%{opacity:0}}
+.big{font:600 22px var(--tech);text-align:center;padding:14px;max-width:420px;margin:0 auto;display:block}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:8px auto 0;max-width:720px}
+.ch{position:relative;cursor:pointer;padding:16px;text-align:left;display:flex;gap:12px;align-items:center;transition:transform .15s,box-shadow .2s}
+.ch:hover{transform:translateY(-3px);box-shadow:0 0 22px rgba(var(--c-rgb),.45)}
+.ch.sel{box-shadow:0 0 0 2px var(--cyan),0 0 26px rgba(var(--c-rgb),.55)}
+.ch .ic{font-size:34px}
+.ch b{display:block;font:700 14px var(--hud);letter-spacing:1.5px;color:#fff}
+.ch span{font:500 15px var(--tech);color:var(--dim)}
+.th{background:linear-gradient(135deg,rgba(var(--c-rgb),.18),rgba(var(--p-rgb),.9) 70%);border:1px solid rgba(var(--c-rgb),.3)}
+.form{max-width:560px;margin:0 auto;text-align:left}
+.form label{display:block;margin:14px 0 5px;color:#a9c9dd;font-size:13px}
+.form ol{color:var(--dim);font-size:13px;margin:6px 0 0 18px;padding:0}
+.form textarea{min-height:110px;font:500 14px Consolas,monospace}
+.nav{display:flex;gap:12px;justify-content:center;margin-top:26px}
+.nav button{padding:11px 22px}
+.dots{display:flex;gap:8px;justify-content:center;margin-top:22px}
+.dots i{width:28px;height:3px;background:rgba(var(--c-rgb),.25)}
+.dots i.on{background:var(--cyan);box-shadow:var(--glow)}
+.skip{position:fixed;top:14px;right:18px;font-size:10px}
+.muted a{cursor:pointer}
+</style></head><body class="scan">
+<button class="skip" id="skip">Skip setup</button>
+<div class="wrap">
+  <div id="reactor"></div>
+
+  <!-- 0: olá -->
+  <div class="step on" data-s="0">
+    <h2>J.A.R.V.I.S.</h2>
+    <div class="lead typing" id="hello"></div>
+    <div class="nav"><button class="primary" data-next>Let's begin</button></div>
+  </div>
+
+  <!-- 1: nome -->
+  <div class="step" data-s="1">
+    <h2>Identification</h2>
+    <div class="lead">What should I call you?</div>
+    <input class="big" id="name" placeholder="Your name" maxlength="30" autocomplete="off">
+    <div class="nav"><button data-back>Back</button><button class="primary" data-next>Continue</button></div>
+  </div>
+
+  <!-- 2: cor -->
+  <div class="step" data-s="2">
+    <h2>Choose your style</h2>
+    <div class="lead">Pick the colors you like. You can change it later.</div>
+    <div class="choices" id="themes"></div>
+    <div class="nav"><button data-back>Back</button><button class="primary" data-next>Continue</button></div>
+  </div>
+
+  <!-- 3: escola ou trabalho -->
+  <div class="step" data-s="3">
+    <h2>What's it for?</h2>
+    <div class="lead">I'll set myself up for you.</div>
+    <div class="choices" style="max-width:560px">
+      <div class="ch hud" data-use="school"><span class="ic">🎒</span><div><b>School</b><span>Classes, homework (Canvas), timetable</span></div></div>
+      <div class="ch hud" data-use="work"><span class="ic">💼</span><div><b>Work</b><span>Meetings, Gmail & Teams calendars</span></div></div>
+    </div>
+    <div class="nav"><button data-back>Back</button><button class="primary" data-next id="useNext" disabled>Continue</button></div>
+  </div>
+
+  <!-- 4a: escola -->
+  <div class="step" data-s="4" data-for="school">
+    <h2>School links</h2>
+    <div class="lead">Connect your school so I can see your homework and classes. (You can skip and do it later.)</div>
+    <div class="form">
+      <label>Your school's Canvas link</label>
+      <input id="canvasUrl" placeholder="https://canvas.yourschool.com">
+      <label>Canvas token <span class="muted">— Canvas → Account → Settings → "+ New Access Token" → copy</span></label>
+      <input id="canvasToken" type="password" placeholder="paste the long code" autocomplete="off">
+      <label>School calendar / portal link (optional, .ics or webcal://)</label>
+      <input id="schoolIcs" placeholder="https://…/calendar.ics">
+      <label>Your classes (optional) — one per line: <code>Mon 08:40-09:40 Maths | N310</code></label>
+      <textarea id="classes" placeholder="Mon 08:40-09:40 Maths | N310&#10;Mon 09:40-10:40 English | N308"></textarea>
+    </div>
+    <div class="nav"><button data-back>Back</button><button class="primary" data-next>Continue</button></div>
+  </div>
+
+  <!-- 4b: trabalho -->
+  <div class="step" data-s="4" data-for="work">
+    <h2>Work calendars</h2>
+    <div class="lead">Connect Gmail and Teams so I can show your meetings. (You can skip and do it later.)</div>
+    <div class="form">
+      <label>📧 Gmail (Google Calendar) — secret iCal address</label>
+      <input id="gmailIcs" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics">
+      <div class="muted">Google Calendar on a computer → ⚙ Settings → your calendar → <b>Integrate calendar</b> → copy <b>Secret address in iCal format</b>. <a data-u="https://calendar.google.com/calendar/r/settings">Open Google Calendar settings</a></div>
+      <label>🟣 Teams / Outlook — published calendar (ICS link)</label>
+      <input id="teamsIcs" placeholder="https://outlook.office365.com/owa/calendar/…/calendar.ics">
+      <div class="muted">Outlook → ⚙ Settings → Calendar → <b>Shared calendars</b> → <b>Publish a calendar</b> → "Can view all details" → Publish → copy the <b>ICS</b> link. <a data-u="https://outlook.office.com/calendar/options/calendar/SharedCalendars">Open Outlook settings</a></div>
+    </div>
+    <div class="nav"><button data-back>Back</button><button class="primary" data-next>Continue</button></div>
+  </div>
+
+  <!-- 5: IA -->
+  <div class="step" data-s="5">
+    <h2>My brain</h2>
+    <div class="lead">How should I think? (You can change it later in Settings.)</div>
+    <div class="choices">
+      <div class="ch hud" data-ai="github"><span class="ic">⭐</span><div><b>GitHub AI</b><span>Free & strong · needs a GitHub token (Settings)</span></div></div>
+      <div class="ch hud" data-ai="claude"><span class="ic">🧠</span><div><b>Claude</b><span>Smartest · can use the screen · paid key</span></div></div>
+      <div class="ch hud" data-ai="none"><span class="ic">⚡</span><div><b>Basics only</b><span>Free, offline: classes, homework, timer…</span></div></div>
+    </div>
+    <div class="nav"><button data-back>Back</button><button class="primary" data-next>Continue</button></div>
+  </div>
+
+  <!-- 6: pronto -->
+  <div class="step" data-s="6">
+    <h2>All systems online</h2>
+    <div class="lead typing" id="bye"></div>
+    <div class="nav"><button class="primary" id="finish">Open J.A.R.V.I.S.</button></div>
+    <div class="muted" id="err" style="margin-top:10px"></div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+</div>
+<script>
+const K = new URLSearchParams(location.search).get("k");
+const api = (path, opts = {}) => fetch(path, { ...opts, headers: { "X-Jarvis-Key": K, "Content-Type": "application/json" } })
+  .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || ("Error " + r.status)); return j; });
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const NAME = () => document.documentElement.dataset.theme === "friday" ? "F.R.I.D.A.Y." : ["J", "A", "R", "V", "I", "S"].join(".") + ".";
+let S = null, step = 0, use = "", ai = "", theme = "jarvis";
+
+$("reactor").innerHTML = JarvisRobot.svg(170);
+const rx = () => $("reactor").querySelector(".jrobot");
+
+function type(el, text) {
+  el.textContent = ""; el.classList.add("typing"); let i = 0;
+  const go = () => { if (i <= text.length) { el.textContent = text.slice(0, i++); setTimeout(go, 22); } };
+  go();
+}
+const STEPS = [0, 1, 2, 3, 4, 5, 6];
+function show(n) {
+  step = n;
+  document.querySelectorAll(".step").forEach(s => {
+    const ok = +s.dataset.s === n && (!s.dataset.for || s.dataset.for === use);
+    s.classList.toggle("on", ok);
+  });
+  $("dots").innerHTML = STEPS.map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("");
+  JarvisRobot.set(rx(), n === 6 ? "speaking" : n === 0 ? "listening" : "idle");
+  $("reactor").style.transform = n === 0 || n === 6 ? "scale(1.15)" : "scale(.8)";
+  if (n === 1) setTimeout(() => $("name").focus(), 100);
+  if (n === 6) {
+    const nm = $("name").value.trim();
+    type($("bye"), `Welcome aboard${nm ? ", " + nm : ""}. I'm ready when you are.`);
+  }
+}
+document.querySelectorAll("[data-next]").forEach(b => b.onclick = () => show(Math.min(6, step + 1)));
+document.querySelectorAll("[data-back]").forEach(b => b.onclick = () => show(Math.max(0, step - 1)));
+document.addEventListener("keydown", e => { if (e.key === "Enter" && step === 1) show(2); });
+
+// temas
+const THEMES = [
+  { id: "jarvis", nm: ["J", "A", "R", "V", "I", "S"].join(".") + ".", ds: "Classic blue · male voice" },
+  { id: "friday", nm: "F.R.I.D.A.Y.", ds: "Pink · female voice 💗" },
+  { id: "ironman", nm: "Mark III", ds: "Iron Man red & gold" },
+  { id: "emerald", nm: "Emerald", ds: "Hacker green" },
+  { id: "galaxy", nm: "Galaxy", ds: "Purple space" },
+];
+function drawThemes() {
+  $("themes").innerHTML = THEMES.map(t => `<div class="ch th ${t.id === theme ? "sel" : ""}" data-theme="${t.id}" data-t="${t.id}">${JarvisRobot.svg(52)}<div><b>${t.nm}</b><span>${t.ds}</span></div></div>`).join("");
+  $("themes").querySelectorAll("[data-t]").forEach(el => el.onclick = () => { theme = el.dataset.t; document.documentElement.dataset.theme = theme; drawThemes(); });
+}
+document.querySelectorAll("[data-use]").forEach(el => el.onclick = () => {
+  use = el.dataset.use; document.querySelectorAll("[data-use]").forEach(x => x.classList.toggle("sel", x === el)); $("useNext").disabled = false;
+});
+document.querySelectorAll("[data-ai]").forEach(el => el.onclick = () => { ai = el.dataset.ai; document.querySelectorAll("[data-ai]").forEach(x => x.classList.toggle("sel", x === el)); });
+document.querySelectorAll("[data-u]").forEach(a => a.onclick = e => { e.preventDefault(); api("/api/open-url", { method: "POST", body: JSON.stringify({ url: a.dataset.u }) }); });
+
+function parseClasses(text) {
+  const out = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const m = raw.trim().match(/^(\S+)\s+(\d{1,2})[:h.](\d{2})\s*[-–]\s*(\d{1,2})[:h.](\d{2})\s+(.+)$/);
+    if (!m) continue;
+    const [subject, room = ""] = m[6].split("|").map(x => x.trim());
+    const d = m[1].slice(0, 3).toLowerCase(), map = { seg: "Mon", ter: "Tue", qua: "Wed", qui: "Thu", sex: "Fri", sab: "Sat", "sáb": "Sat", dom: "Sun" };
+    out.push({ day: map[d] || DAYS.find(x => x.toLowerCase() === d) || "Mon", start: m[2].padStart(2, "0") + ":" + m[3], end: m[4].padStart(2, "0") + ":" + m[5], subject, room });
+  }
+  return out;
+}
+
+async function finish(skipAll) {
+  $("err").textContent = "";
+  const c = { ...S };
+  delete c.apiKeySet; delete c.canvasTokenSet; delete c.githubTokenSet;
+  c.finishOnboarding = true;
+  if (!skipAll) {
+    c.userName = $("name").value.trim(); c.theme = theme; c.use = use || "school";
+    if (ai) c.aiProvider = ai;
+    if (use === "school") {
+      if ($("canvasUrl").value.trim()) c.canvasUrl = $("canvasUrl").value.trim();
+      c.canvasToken = $("canvasToken").value.trim();
+      const ics = $("schoolIcs").value.trim(); if (ics && !(c.ics || []).includes(ics)) c.ics = [...(c.ics || []), ics];
+      const cls = parseClasses($("classes").value); if (cls.length) c.timetable = cls;
+    } else if (use === "work") {
+      const cals = [...(c.calendars || [])];
+      if ($("gmailIcs").value.trim()) cals.push({ name: "Gmail", url: $("gmailIcs").value.trim() });
+      if ($("teamsIcs").value.trim()) cals.push({ name: "Teams", url: $("teamsIcs").value.trim() });
+      c.calendars = cals;
+    }
+  }
+  try {
+    await api("/api/settings", { method: "POST", body: JSON.stringify(c) });
+    location.replace("/home?k=" + K);
+  } catch (e) { $("err").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+$("finish").onclick = () => finish(false);
+$("skip").onclick = () => finish(true);
+
+api("/api/settings").then(s => {
+  S = s; theme = s.theme || "jarvis"; document.documentElement.dataset.theme = theme;
+  $("name").value = s.userName || ""; $("canvasUrl").value = s.canvasUrl || "";
+  if (s.use) { use = ""; }
+  drawThemes(); show(0);
+  type($("hello"), "Hello. I'm your personal assistant. Let's get you set up — it takes one minute.");
+});
+</script></body></html>

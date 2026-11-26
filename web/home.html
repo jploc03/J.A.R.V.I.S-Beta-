@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jarvis</title><link rel="stylesheet" href="/jarvis.css"><script src="/robot.js"></script>
+<style>
+html,body{height:100%}
+html{background:#06101e}
+body{display:flex;flex-direction:column;overflow:hidden;background:transparent!important}
+#sky{position:fixed;inset:0;z-index:-1;width:100vw;height:100vh;display:block}
+.top{display:flex;align-items:center;gap:22px;padding:14px 20px;border-bottom:1px solid rgba(120,190,255,.15);background:rgba(4,10,20,.18)}
+.brand{display:flex;align-items:center;gap:10px;padding-right:20px;border-right:1px solid var(--line2);cursor:pointer;transition:filter .2s}
+.brand:hover{filter:brightness(1.35) drop-shadow(0 0 10px rgba(var(--c-rgb),.7))}
+.brand:hover .reactor .r1{animation-duration:1.5s}
+.top button.ico{font-size:16px;padding:7px 12px;letter-spacing:0}
+.foot .rf{cursor:pointer;color:var(--cyan);margin-left:8px}
+.foot .rf:hover{text-shadow:var(--glow)}
+.brand .word{font:700 17px var(--hud);letter-spacing:4px;color:#fff;text-shadow:var(--glow)}
+.brand .sub{font:500 11px var(--tech);letter-spacing:2.5px;color:var(--cyan);text-transform:uppercase;opacity:.8}
+.clock{font:500 40px/1 var(--hud);color:#fff;letter-spacing:2px;font-variant-numeric:tabular-nums;text-shadow:0 0 16px rgba(var(--c-rgb),.65)}
+.clock small{font-size:15px;color:var(--cyan);margin-left:3px;opacity:.8}
+.date{color:var(--cyan2);font:600 15px var(--tech);letter-spacing:1px;margin-top:5px;text-transform:uppercase}
+.greet{color:var(--dim);font-size:12.5px}
+.wx{display:flex;align-items:center;gap:10px;margin-left:8px;padding-left:22px;border-left:1px solid var(--line)}
+.wx .ic{font-size:34px}
+.wx .t{font:500 24px var(--hud);color:#fff}
+.wx .d{font-size:12px;color:var(--dim)}
+.sp{flex:1}
+.top button{font-size:10px}
+#mini{font-weight:600}
+.wrap{flex:1;display:grid;grid-template-columns:1fr 390px;min-height:0}
+.main{overflow-y:auto;padding:16px 18px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+.card{background:rgba(var(--p-rgb),.6);border:1px solid rgba(120,190,255,.16);border-radius:14px;padding:13px 15px;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(8px)}
+.card h3{margin:0 0 10px;font:700 10.5px var(--hud);letter-spacing:2.2px;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;text-shadow:0 0 8px rgba(var(--c-rgb),.5)}
+.card h3::after{content:"";flex:0 0 26px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent);margin-left:8px;opacity:.6}
+.card h3 span{order:3}
+.card h3 span{margin-left:auto;letter-spacing:0;text-transform:none;color:var(--dim);font:500 13px var(--tech);text-shadow:none}
+.full{grid-column:1/-1}
+.next{display:flex;gap:16px;align-items:center}
+.next .big{font:600 30px/1.1 var(--tech);color:#fff;letter-spacing:.5px}
+.next .sub{color:var(--text)}
+.next .cd{margin-left:auto;text-align:right;color:var(--cyan);font:500 26px var(--hud);white-space:nowrap;text-shadow:var(--glow)}
+.next .cd small{display:block;font-size:12px;color:var(--dim)}
+.now{color:var(--yellow);margin-bottom:8px;font-size:13.5px}
+.cls{display:flex;gap:10px;padding:6px 8px;align-items:baseline;border-left:2px solid transparent}
+.cls .tm{min-width:92px;color:var(--cyan2);font:600 14px var(--tech);letter-spacing:.5px}
+.cls b{color:#fff;font-weight:600}
+.cls i{font-style:normal;color:var(--dim);font-size:12px;margin-left:auto;text-align:right}
+.cls.past{opacity:.45}
+.cls.cur{background:linear-gradient(90deg,rgba(255,207,92,.16),transparent);border-left-color:var(--yellow)}
+.cls.nxt{background:linear-gradient(90deg,rgba(var(--c-rgb),.12),transparent);border-left-color:var(--cyan)}
+.day{font:600 11px var(--tech);letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:8px 0 2px}
+.hw{display:flex;gap:10px;padding:5px 8px;border-radius:8px;align-items:center}
+.hw[data-url]{cursor:pointer}.hw[data-url]:hover{background:rgba(95,208,255,.08)}
+.hw .tm{min-width:62px;color:var(--cyan2);font:600 14px var(--tech)}
+.hw .tt{flex:1;min-width:0}
+.hw b{display:block;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hw small{color:var(--dim)}
+.hw.done b{text-decoration:line-through;opacity:.55}
+.tag{font-size:11px;padding:1px 8px;border-radius:8px;white-space:nowrap;background:rgba(255,255,255,.06);color:var(--dim)}
+.tag.ok{background:rgba(60,220,140,.15);color:var(--green)}
+.tag.late{background:rgba(255,90,90,.18);color:var(--red)}
+.empty{color:var(--green);padding:3px 8px;font-size:13px}
+.empty.dim{color:var(--dim)}
+table.week{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+.week th{font:700 10px var(--hud);letter-spacing:2px;color:var(--dim);padding:2px}
+.week th.today{color:var(--cyan)}
+.week td{background:rgba(var(--cell-rgb),.72);border:1px solid rgba(var(--c-rgb),.1);padding:6px 7px;vertical-align:top;font-size:12px;height:48px}
+.week td.t{background:none;border:0;color:var(--cyan2);font:600 13px var(--tech);width:86px;vertical-align:middle}
+.week td b{display:block;color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.week td span{color:var(--dim);font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.week td.todaycol{border-color:rgba(var(--c-rgb),.45);box-shadow:inset 0 0 12px rgba(var(--c-rgb),.12)}
+.week td.curcell{background:rgba(255,207,92,.16);border-color:rgba(255,207,92,.6);box-shadow:0 0 12px rgba(255,207,92,.3)}
+.week td.none{background:transparent}
+.banner{grid-column:1/-1;background:rgba(48,38,10,.7)!important;border-color:rgba(255,207,92,.35)!important;color:var(--yellow);padding:10px 14px;display:flex;gap:12px;align-items:center}
+.banner span{flex:1}
+.chat{border-left:1px solid rgba(120,190,255,.16);display:flex;min-height:0;background:rgba(var(--p-rgb),.55);backdrop-filter:blur(4px)}
+.chat iframe{border:0;width:100%;height:100%}
+.foot{grid-column:1/-1;color:var(--dim);font-size:12px;display:flex;gap:12px}
+.wrap.closed{grid-template-columns:1fr}
+.wrap.closed .chat{display:none}
+.wrap.closed .main{grid-template-columns:1fr 1fr 1fr}
+.wrap.closed .main .full{grid-column:1/-1}
+.wrap.closed #alertsCard{grid-column:span 2}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}.main,.wrap.closed .main{grid-template-columns:1fr}
+  .wrap:not(.closed) .chat{position:fixed;right:0;top:80px;bottom:0;width:min(400px,100vw);z-index:20}}
+#askBtn{display:none}
+#chatBtn.on{background:rgba(var(--c-rgb),.2);color:#fff}
+#robotBtn{position:fixed;right:22px;bottom:18px;z-index:30;cursor:pointer;display:none;filter:drop-shadow(0 0 12px rgba(var(--c-rgb),.5));transition:transform .2s}
+#robotBtn:hover{transform:scale(1.08)}
+#robotBtn .tip{position:absolute;right:86px;bottom:30px;white-space:nowrap;background:rgba(var(--p-rgb),.9);border:1px solid var(--line2);color:var(--cyan);font:700 9.5px var(--hud);letter-spacing:1.5px;padding:6px 10px;opacity:0;transition:opacity .2s;pointer-events:none}
+#robotBtn:hover .tip{opacity:1}
+.wrap.closed ~ #robotBtn{display:block}
+/* ---- Timer (estilo Apple) ---- */
+.timer{display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:170px;height:170px;flex:0 0 auto}
+.ring svg{transform:rotate(-90deg)}
+.ring .bg{stroke:#2b2b31}
+.ring .fg{stroke:#ff9f0a;stroke-linecap:round;transition:stroke .3s;filter:drop-shadow(0 0 5px rgba(255,159,10,.8))}
+.ring.done .fg{stroke:#ff453a;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .left{font:500 30px var(--hud);color:#fff;letter-spacing:1px;text-shadow:0 0 12px rgba(255,159,10,.5)}
+.ring .bell{font-size:12px;color:var(--dim);margin-top:2px}
+.ring .lab{font-size:12px;color:#ffb340;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tside{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pick{display:flex;align-items:flex-end;gap:6px}
+.pick label{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--dim);gap:3px}
+.pick input{width:60px;text-align:center;font:500 24px var(--hud);padding:5px 2px;background:rgba(20,16,8,.7);border-color:rgba(255,159,10,.35);color:#ffd08a}
+.pick span{font-size:24px;color:var(--dim);padding-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:4px 10px;font-size:9.5px;background:rgba(40,28,8,.6);border-color:rgba(255,159,10,.4);color:#ffb340}
+.chips button:hover{background:#3a3a44}
+.tbtns{display:flex;gap:16px}
+.cbtn{width:66px;height:66px;border-radius:50%;padding:0;font-size:9.5px;letter-spacing:1px;clip-path:none;border:1.5px solid currentColor;box-shadow:0 0 0 3px rgba(0,0,0,.55) inset,0 0 10px -2px currentColor}
+.cbtn.cancel{background:rgba(120,120,128,.28);color:#e8e8ee}
+.cbtn.cancel:hover{background:rgba(120,120,128,.4)}
+.cbtn.start{background:rgba(48,209,88,.22);color:#30d158}
+.cbtn.start:hover{background:rgba(48,209,88,.32)}
+.cbtn.pause{background:rgba(255,159,10,.22);color:#ff9f0a}
+.cbtn.pause:hover{background:rgba(255,159,10,.32)}
+.cbtn.stop{background:rgba(255,69,58,.25);color:#ff6961}
+.cbtn:disabled{opacity:.35}
+#tLabel{font-size:12.5px;padding:6px 9px}
+/* ---- Ferramentas ---- */
+.tabs{display:flex;gap:3px;margin:-2px 0 12px}
+.tabs button{flex:1;padding:6px 4px;font-size:8.5px;letter-spacing:.6px;background:transparent;border-color:rgba(var(--c-rgb),.25);color:var(--dim)}
+.tabs button.on{background:rgba(var(--c-rgb),.18);border-color:var(--cyan);color:#fff;box-shadow:0 0 10px rgba(var(--c-rgb),.35)}
+.calc{max-width:330px;margin:0 auto}
+.cdisp{background:rgba(0,0,0,.35);border:1px solid var(--line2);padding:8px 12px;text-align:right;margin-bottom:8px;min-height:64px}
+#cExpr{font:500 14px var(--tech);color:var(--dim);min-height:18px;word-break:break-all}
+#cRes{font:500 28px var(--hud);color:#fff;text-shadow:var(--glow);overflow:hidden;text-overflow:ellipsis}
+#cRes.final{color:var(--cyan2)}
+.ckeys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ckeys button{padding:10px 0;font-size:14px;letter-spacing:0;font-family:var(--hud)}
+.ckeys button.op{color:#ffb340;border-color:rgba(255,159,10,.5);background:rgba(60,36,8,.5)}
+.ckeys button.eq{background:linear-gradient(90deg,var(--btn1),var(--btn2));color:#fff;border-color:var(--cyan)}
+.ckeys button.clr{color:var(--red)}
+.sw{text-align:center}
+#swTime{font:500 44px var(--hud);color:#fff;text-shadow:var(--glow);margin:6px 0 12px;font-variant-numeric:tabular-nums}
+#swTime small{font-size:22px;color:var(--cyan)}
+.sw .tbtns{justify-content:center}
+#swLaps{max-height:150px;overflow-y:auto;margin-top:10px;text-align:left}
+.lap{display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px solid var(--line2);font:600 14px var(--tech)}
+.lap small{font-size:12px;opacity:.7}.lap.best{color:var(--green)}.lap.worst{color:var(--red)}
+#notes{min-height:220px;resize:vertical;font:500 15px/1.5 var(--tech);background:rgba(0,0,0,.3)}
+#notesSaved{text-align:right;min-height:16px;margin-top:4px}
+/* ---- Avisos ---- */
+.mt{display:flex;gap:10px;align-items:center;padding:6px 8px;border-left:2px solid transparent}
+.mt .tm{min-width:92px;color:var(--cyan2);font:600 14px var(--tech)}
+.mt .tt{flex:1;min-width:0}.mt b{display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mt small{color:var(--dim)}
+.mt.live{background:linear-gradient(90deg,rgba(92,242,168,.14),transparent);border-left-color:var(--green)}
+.mt.soon{background:linear-gradient(90deg,rgba(var(--c-rgb),.14),transparent);border-left-color:var(--cyan)}
+.mt .join{padding:6px 12px;font-size:10px}
+.al{display:flex;gap:10px;padding:6px 6px;border-radius:8px;align-items:flex-start}
+.al .ic{font-size:18px;line-height:1.2}
+.al b{color:#fff;font-weight:600;display:block}
+.al small{color:var(--dim)}
+.al .ago{margin-left:auto;color:var(--dim);font-size:11px;white-space:nowrap}
+.rainbars{display:flex;gap:3px;align-items:flex-end;height:46px;margin:6px 0 2px}
+.rainbars div{flex:1;background:linear-gradient(var(--cyan2),#0a5f96);min-height:2px;position:relative;box-shadow:0 0 6px rgba(var(--c-rgb),.4)}
+.rainlab{display:flex;gap:3px;font-size:10px;color:var(--dim)}
+.rainlab span{flex:1;text-align:center}
+</style></head><body class="scan">
+<canvas id="sky"></canvas>
+<div class="top">
+  <div class="brand" id="brand" title="Click the reactor to talk to J.A.R.V.I.S. 🎙"><svg class="reactor" viewBox="0 0 40 40" style="width:44px;height:44px"><circle cx="20" cy="20" r="18" fill="none" stroke-opacity=".35" stroke-width="1" style="stroke:var(--cyan)"/>
+<g class="r1"><circle cx="20" cy="20" r="15" fill="none" stroke-width="2" stroke-dasharray="10 5" style="stroke:var(--cyan)"/></g>
+<g class="r2"><circle cx="20" cy="20" r="10.5" fill="none" stroke-width="1.5" stroke-dasharray="4 3" style="stroke:var(--cyan2)"/></g>
+<circle class="core" cx="20" cy="20" r="5.5" style="fill:var(--core)"/></svg><div><div class="word">J.A.R.V.I.S.</div><div class="sub" id="brandSub">tap to talk 🎙</div></div></div>
+  <div><div class="clock" id="clock">--:--</div><div class="date" id="date"></div><div class="greet" id="greet"></div></div>
+  <div class="wx" id="wx"></div>
+  <span class="sp"></span>
+  <button id="askBtn">💬 Ask Jarvis</button>
+  <button id="robotsBtn" class="ico" title="Robot Room — your robot team">🤖</button>
+  <button id="chatBtn" class="ico" title="Show / hide the chat">💬</button>
+  <button id="settings" class="ico" title="Settings">⚙</button>
+  <button id="mini" class="primary" title="Turn into the small floating square">▣ Mini</button>
+</div>
+<div class="wrap">
+  <div class="main" id="main"></div>
+  <div class="chat"><iframe id="chatFrame" title="Ask Jarvis" allow="microphone"></iframe></div>
+</div>
+<div id="robotBtn" title="Open the chat"><span class="tip">TALK TO ME</span></div>
+<script>
+const K = new URLSearchParams(location.search).get("k");
+const api = (path, opts = {}) => fetch(path, { ...opts, headers: { "X-Jarvis-Key": K, "Content-Type": "application/json" } })
+  .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || ("Error " + r.status)); return j; });
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pad = n => String(n).padStart(2, "0");
+const hm = d => pad(d.getHours()) + ":" + pad(d.getMinutes());
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WX = c => c === 0 ? "☀️" : c <= 2 ? "⛅" : c === 3 ? "☁️" : c <= 48 ? "🌫️" : c <= 57 ? "🌦️" : c <= 67 ? "🌧️" : c <= 77 ? "🌨️" : c <= 82 ? "🌦️" : "⛈️";
+let S = null;
+
+$("chatFrame").src = "/chat?k=" + K + "&embed=1";
+
+function greeting(h) { return h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
+function countdown(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 1) return "now"; if (m < 60) return m + " min";
+  const h = Math.floor(m / 60), r = m % 60;
+  if (h < 24) return h + "h" + (r ? pad(r) : "");
+  const d = Math.round(h / 24); return d + " day" + (d > 1 ? "s" : "");
+}
+function whenDay(d, now) {
+  const a = new Date(now); a.setHours(0, 0, 0, 0); const b = new Date(d); b.setHours(0, 0, 0, 0);
+  const diff = Math.round((b - a) / 864e5);
+  return diff === 0 ? "today" : diff === 1 ? "tomorrow" : d.toLocaleDateString("en-GB", { weekday: "long" });
+}
+function tick() {
+  const now = new Date();
+  $("clock").innerHTML = hm(now) + `<small>:${pad(now.getSeconds())}</small>`;
+  $("date").textContent = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  $("greet").textContent = greeting(now.getHours()) + (S?.userName ? ", " + S.userName : "") + (S?.weather?.city ? " · " + S.weather.city : "");
+}
+
+function hwRow(e, now) {
+  const d = new Date(e.start);
+  let t = hm(d); if (t === "00:00") t = "—"; if (t === "23:59") t = "end of day";
+  const tag = e.done ? `<span class="tag ok">✓ done</span>` : (e.missing || (d < now && t !== "—")) ? `<span class="tag late">late</span>` : `<span class="tag">${esc(e.source)}</span>`;
+  return `<div class="hw ${e.done ? "done" : ""}" ${e.url ? `data-url="${esc(e.url)}"` : ""}><span class="tm">${t}</span>
+    <span class="tt"><b title="${esc(e.title)}">${esc(e.title)}</b>${e.course ? `<small>${esc(e.course)}</small>` : ""}</span>${tag}</div>`;
+}
+
+function render() {
+  if (!S) return;
+  const now = new Date();
+  tick();
+  const w = S.weather;
+  $("wx").innerHTML = w.ok ? `<span class="ic">${WX(w.code)}</span><div><div class="t">${Math.round(w.temp)}°</div><div class="d">${esc(w.text)}</div></div>
+    <div class="d">${Math.round(w.min)}° / ${Math.round(w.max)}° · rain ${w.rain}%<br>Tomorrow ${WX(w.tomCode)} ${Math.round(w.tomMax)}° · rain ${w.tomRain}%</div>` : `<div class="d">Weather loading…</div>`;
+
+  let h = "";
+  if (S.update && S.update.ready) h += `<div class="banner hud"><span>⬆ <b>J.A.R.V.I.S. ${esc(S.update.version)}</b> is ready to install.</span><button id="doUpdate" class="primary">Update now</button></div>`;
+  const school = S.use !== "work";
+  if (!school) h += meetingsCard(now, true);
+  if (school) {
+  if (S.canvasState === "notoken") h += `<div class="banner hud"><span>📚 Add your Canvas token so Jarvis can see your homework.</span><button data-set="#canvas">Open Settings</button></div>`;
+  else if (S.canvasState === "badtoken") h += `<div class="banner hud"><span>📚 Canvas didn't accept your token. Paste a new one.</span><button data-set="#canvas">Open Settings</button></div>`;
+  else if (S.canvasState === "error") h += `<div class="banner hud"><span>📚 Couldn't reach Canvas right now.</span><button id="retry">Try again</button></div>`;
+  if (!S.timetable.length) h += `<div class="banner hud"><span>📅 Add your classes so Jarvis can show your next class.</span><button data-set="#classes">Add classes</button></div>`;
+
+  // Próxima aula
+  const cur = S.current, nx = S.next;
+  h += `<div class="card hud full"><h3>🏫 Next class</h3>`;
+  if (cur) h += `<div class="now">▶ Now: <b>${esc(cur.title)}</b> until ${hm(new Date(cur.end))}${cur.location ? " · " + esc(cur.location) : ""}</div>`;
+  if (nx) {
+    const s = new Date(nx.start);
+    h += `<div class="next"><div><div class="big">${esc(nx.title)}</div>
+      <div class="sub">${whenDay(s, now)} at ${hm(s)}${nx.end ? "–" + hm(new Date(nx.end)) : ""}${nx.location ? " · 📍 " + esc(nx.location) : ""}</div></div>
+      <div class="cd">${countdown(s - now)}<small>${s - now < 60000 ? "" : "to go"}</small></div></div>`;
+  } else h += `<div class="empty dim">No upcoming classes found.</div>`;
+  h += `</div>`;
+
+  // Aulas de hoje
+  h += `<div class="card hud"><h3>📅 Today's classes <span>${S.today.length} classes</span></h3>`;
+  if (!S.today.length) h += `<div class="empty dim">No classes today 🎉</div>`;
+  for (const c of S.today) {
+    const s = new Date(c.start), e = c.end ? new Date(c.end) : null;
+    const cls = e && s <= now && now < e ? "cur" : (e ? e <= now : s <= now) ? "past" : (nx && c.start === nx.start ? "nxt" : "");
+    h += `<div class="cls ${cls}"><span class="tm">${hm(s)}${e ? "–" + hm(e) : ""}</span><b>${esc(c.title)}</b><i>${esc(c.location || "")}</i></div>`;
+  }
+  h += `</div>`;
+
+  // Lição
+  const n = S.hwToday.length + S.hwTomorrow.length;
+  h += `<div class="card hud"><h3>📚 Homework <span>${n} for today & tomorrow</span></h3>`;
+  h += `<div class="day">Today</div>` + (S.hwToday.length ? S.hwToday.map(e => hwRow(e, now)).join("") : `<div class="empty">✓ Nothing due</div>`);
+  h += `<div class="day">Tomorrow</div>` + (S.hwTomorrow.length ? S.hwTomorrow.map(e => hwRow(e, now)).join("") : `<div class="empty">✓ Nothing due</div>`);
+  if (S.hwLater.length) {
+    let last = "";
+    h += S.hwLater.map(e => { const d = new Date(e.start); const lab = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" });
+      const head = lab !== last ? `<div class="day">${lab}</div>` : ""; last = lab; return head + hwRow(e, now); }).join("");
+  }
+  h += `</div>`;
+  } // fim do modo escola
+
+  // Ferramentas, reuniões e avisos
+  h += `<div id="toolsSlot"></div>`;
+  if (school) h += meetingsCard(now);
+  h += `<div class="card hud" id="alertsCard"><h3>🔔 Alerts</h3>${rainStrip()}${alertsHTML()}</div>`;
+
+  // Semana
+  if (school && S.timetable.length) {
+    const times = [...new Set(S.timetable.map(t => t.start + "–" + t.end))].sort();
+    const days = DAYS.filter(d => S.timetable.some(t => t.day === d));
+    const todayName = DAYS[(now.getDay() + 6) % 7];
+    h += `<div class="card hud full"><h3>🗓 My week</h3><table class="week"><tr><th></th>${days.map(d => `<th class="${d === todayName ? "today" : ""}">${d}</th>`).join("")}</tr>`;
+    for (const t of times) {
+      const [st, en] = t.split("–");
+      h += `<tr><td class="t">${t}</td>`;
+      for (const d of days) {
+        const c = S.timetable.find(x => x.day === d && x.start === st && x.end === en);
+        const [sh, sm] = st.split(":").map(Number), [eh, em] = (en || "0:0").split(":").map(Number);
+        const mins = now.getHours() * 60 + now.getMinutes();
+        const isCur = d === todayName && mins >= sh * 60 + sm && mins < eh * 60 + em;
+        h += c ? `<td class="${isCur ? "curcell" : d === todayName ? "todaycol" : ""}"><b title="${esc(c.subject)}">${esc(c.subject)}</b><span title="${esc(c.room)}">${esc(c.room)}</span></td>` : `<td class="none"></td>`;
+      }
+      h += `</tr>`;
+    }
+    h += `</table></div>`;
+  }
+  h += `<div class="foot"><span>${S.busy ? "Updating…" : S.updatedAt ? "Updated " + hm(new Date(S.updatedAt)) : "Loading…"}<span class="rf" id="refresh" title="Refresh now">⟳ refresh</span></span><span class="sp"></span><span>Jarvis ${esc(S.version)} · ${S.platform === "mac" ? "Mac" : esc(S.hotkey) + " shows the mini square"}</span></div>`;
+
+  $("main").innerHTML = h;
+  $("toolsSlot").replaceWith(toolsEl());
+  $("main").querySelectorAll("[data-url]").forEach(el => el.onclick = (ev) => { ev.stopPropagation && ev.stopPropagation(); openLink(el.dataset.url); });
+  $("main").querySelectorAll("[data-set]").forEach(el => el.onclick = () => openSettings(el.dataset.set));
+  $("retry")?.addEventListener("click", refresh);
+  $("refresh")?.addEventListener("click", refresh);
+  $("doUpdate")?.addEventListener("click", async () => { $("doUpdate").textContent = "Updating…"; await api("/api/update", { method: "POST" }).catch(e => alert(e.message)); });
+  if (S.platform === "mac") { $("mini").style.display = "none"; }
+}
+
+// ================= Reuniões =================
+const APPICON = { "Teams": "🟣", "Google Meet": "🟢", "Zoom": "🔵", "link": "🔗" };
+function meetingsCard(now, big) {
+  const ms = S.meetings || [];
+  let h = `<div class="card hud ${big ? "full" : ""}" id="meetCard"><h3>📅 Meetings <span>${ms.length ? ms.length + " this week" : ""}</span></h3>`;
+  if (!ms.length) return h + `<div class="empty dim">No meetings. Add them (or connect Gmail / Teams) in <a href="#" data-set="#meetings">Settings</a>.</div></div>`;
+  let last = "";
+  for (const m of ms.slice(0, big ? 10 : 6)) {
+    const s = new Date(m.start), e = m.end ? new Date(m.end) : null, live = s <= now && (!e || now < e);
+    const lab = whenDay(s, now); const head = lab !== last ? `<div class="day">${lab}</div>` : ""; last = lab;
+    const soon = !live && s - now < 15 * 60000 && s > now;
+    h += head + `<div class="mt ${live ? "live" : soon ? "soon" : ""}"><span class="tm">${hm(s)}${e ? "–" + hm(e) : ""}</span>
+      <span class="tt"><b>${esc(m.title)}</b><small>${[m.with ? "with " + esc(m.with) : "", esc(m.source)].filter(Boolean).join(" · ")}${live ? ' · <span class="ok">now</span>' : soon ? " · in " + countdown(s - now) : ""}</small></span>
+      ${m.link ? `<button class="join" data-url="${esc(m.link)}">${APPICON[m.app] || "🔗"} Join</button>` : ""}</div>`;
+  }
+  return h + `</div>`;
+}
+
+// ================= Avisos =================
+function ago(iso) { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "now" : m < 60 ? m + " min ago" : Math.round(m / 60) + " h ago"; }
+function alertsHTML() {
+  if (!S.alerts || !S.alerts.length) return `<div class="empty dim">No alerts right now. Jarvis will tell you about rain, ${S.use === "work" ? "meetings and timers" : "homework, meetings and your next class"}.</div>`;
+  return S.alerts.slice(0, 5).map(a => `<div class="al"><span class="ic">${esc(a.icon)}</span><div><b>${esc(a.title)}</b><small>${esc(a.text)}</small></div><span class="ago">${ago(a.at)}</span></div>`).join("");
+}
+function rainStrip() {
+  const hr = S.weather?.hourly; if (!hr || !hr.length) return "";
+  const list = hr.filter(x => new Date(x.t) > Date.now() - 3600e3).slice(0, 12);
+  const max = Math.max(...list.map(x => x.p));
+  const head = max >= 50 ? `☔ Rain likely from ${hm(new Date(list.find(x => x.p >= 50).t))}` : max >= 20 ? "🌦 A little chance of rain" : "☀️ No rain expected in the next hours";
+  return `<div class="day" style="margin-top:0">${head}</div><div class="rainbars">${list.map(x => `<div title="${hm(new Date(x.t))} · ${x.p}%" style="height:${Math.max(4, x.p)}%"></div>`).join("")}</div>
+    <div class="rainlab">${list.map((x, i) => `<span>${i % 3 ? "" : new Date(x.t).getHours()}</span>`).join("")}</div>`;
+}
+
+// ================= Ferramentas: timer, calculadora, cronômetro, notas =================
+let TOOLS = null;
+function toolsEl() {
+  if (TOOLS) return TOOLS;
+  const d = document.createElement("div");
+  d.className = "card hud"; d.id = "toolsCard";
+  d.innerHTML = `<h3>🧰 Tools <span id="tState"></span></h3>
+    <div class="tabs"><button data-t="timer">⏱ Timer</button><button data-t="calc">🧮 Calc</button><button data-t="sw">⏲ Stopwatch</button><button data-t="notes">📝 Notes</button></div>
+    <div class="tp" data-p="timer"><div id="timerBody"></div></div>
+    <div class="tp" data-p="calc">${calcHTML()}</div>
+    <div class="tp" data-p="sw">${swHTML()}</div>
+    <div class="tp" data-p="notes"><textarea id="notes" placeholder="Quick notes, to-dos, ideas… (saved automatically)"></textarea><div class="muted" id="notesSaved"></div></div>`;
+  TOOLS = d;
+  d.querySelectorAll(".tabs button").forEach(b => b.onclick = () => showTool(b.dataset.t));
+  setTimeout(() => { showTool(localStorage.getItem("jtool") || "timer"); renderTimer(true); calcInit(); swInit(); notesInit(); }, 0);
+  return d;
+}
+function showTool(t) {
+  TOOLS.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  TOOLS.querySelectorAll(".tp").forEach(p => p.hidden = p.dataset.p !== t);
+  try { localStorage.setItem("jtool", t); } catch (e) {}
+}
+
+// ---- Calculadora (sem eval: lê a conta com segurança) ----
+function calcHTML() {
+  const k = ["C", "(", ")", "÷", "7", "8", "9", "×", "4", "5", "6", "−", "1", "2", "3", "+", "±", "0", ".", "=", "√", "x²", "%", "⌫"];
+  return `<div class="calc"><div class="cdisp"><div id="cExpr"></div><div id="cRes">0</div></div>
+    <div class="ckeys">${k.map(x => `<button data-k="${x}" class="${"÷×−+=".includes(x) ? "op" : x === "C" ? "clr" : ""}${x === "=" ? " eq" : ""}">${x}</button>`).join("")}</div></div>`;
+}
+let cExpr = "", cJustEval = false;
+function calcEval(src) {
+  const t = src.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/\s+/g, "");
+  let i = 0;
+  const peek = () => t[i], eat = c => t[i] === c ? (i++, true) : false;
+  function num() { const m = /^\d*\.?\d+(e[+-]?\d+)?/i.exec(t.slice(i)) || /^\d+\./.exec(t.slice(i)); if (!m) throw 0; i += m[0].length; return parseFloat(m[0]); }
+  function factor() {
+    let v;
+    if (eat("-")) return -factor();
+    if (eat("+")) return factor();
+    if (t.startsWith("√", i)) { i++; v = Math.sqrt(factor()); }
+    else if (eat("(")) { v = expr(); if (!eat(")")) throw 0; }
+    else v = num();
+    while (true) {
+      if (eat("²")) v = v * v;
+      else if (eat("%")) v = v / 100;
+      else if (eat("^")) v = Math.pow(v, factor());
+      else break;
+    }
+    return v;
+  }
+  function term() { let v = factor(); while (true) { if (eat("*")) v *= factor(); else if (eat("/")) v /= factor(); else if (peek() === "(" || peek() === "√") v *= factor(); else return v; } }
+  function expr() { let v = term(); while (true) { if (eat("+")) v += term(); else if (eat("-")) v -= term(); else return v; } }
+  const v = expr(); if (i !== t.length || !isFinite(v)) throw 0;
+  return Math.round(v * 1e10) / 1e10;
+}
+function calcShow(final) {
+  $("cExpr").textContent = cExpr || "";
+  let r = "";
+  try { r = cExpr ? calcEval(cExpr) : 0; } catch (e) { r = final ? "Error" : $("cRes").textContent; }
+  $("cRes").textContent = typeof r === "number" ? r.toLocaleString("en-GB", { maximumFractionDigits: 10 }) : r;
+  $("cRes").classList.toggle("final", !!final);
+}
+function calcKey(k) {
+  if (cJustEval && /[\d.(√]/.test(k)) cExpr = "";
+  cJustEval = false;
+  switch (k) {
+    case "C": cExpr = ""; break;
+    case "⌫": cExpr = cExpr.slice(0, -1); break;
+    case "=": try { cExpr = String(calcEval(cExpr)); cJustEval = true; calcShow(true); return; } catch (e) { calcShow(true); return; }
+    case "±": cExpr = cExpr.startsWith("-(") && cExpr.endsWith(")") ? cExpr.slice(2, -1) : cExpr ? "-(" + cExpr + ")" : "-"; break;
+    case "x²": cExpr += "²"; break;
+    default: cExpr += k;
+  }
+  calcShow(false);
+}
+function calcInit() {
+  TOOLS.querySelectorAll(".ckeys button").forEach(b => b.onclick = () => calcKey(b.dataset.k));
+  document.addEventListener("keydown", e => {
+    if (localStorage.getItem("jtool") !== "calc" || /INPUT|TEXTAREA/.test(document.activeElement?.tagName)) return;
+    const map = { "*": "×", "/": "÷", "-": "−", "Enter": "=", "=": "=", "Backspace": "⌫", "Escape": "C", "Delete": "C" };
+    const k = map[e.key] || (/^[\d.+()%]$/.test(e.key) ? e.key : null);
+    if (k) { e.preventDefault(); calcKey(k); }
+  });
+  calcShow(false);
+}
+
+// ---- Cronômetro (estilo iPhone, com voltas) ----
+function swHTML() {
+  return `<div class="sw"><div id="swTime">00:00<small>.00</small></div>
+    <div class="tbtns"><button class="cbtn cancel" id="swLap">Lap</button><button class="cbtn start" id="swGo">Start</button></div>
+    <div id="swLaps"></div></div>`;
+}
+let SW = { start: 0, acc: 0, run: false, laps: [] };
+function swNow() { return SW.acc + (SW.run ? Date.now() - SW.start : 0); }
+function swFmt(ms) { const cs = Math.floor(ms / 10) % 100, s = Math.floor(ms / 1000) % 60, m = Math.floor(ms / 60000) % 60, h = Math.floor(ms / 3600000);
+  return (h ? h + ":" + pad(m) : pad(m)) + ":" + pad(s) + `<small>.${pad(cs)}</small>`; }
+function swSave() { try { localStorage.setItem("jsw", JSON.stringify(SW)); } catch (e) {} }
+function swDraw() {
+  $("swGo").textContent = SW.run ? "Stop" : "Start"; $("swGo").className = "cbtn " + (SW.run ? "stop" : "start");
+  $("swLap").textContent = SW.run || !swNow() ? "Lap" : "Reset"; $("swLap").disabled = !SW.run && !swNow();
+  const laps = SW.laps.map((l, i) => [i, l - (SW.laps[i - 1] || 0)]);
+  const best = laps.length > 1 ? Math.min(...laps.map(x => x[1])) : -1, worst = laps.length > 1 ? Math.max(...laps.map(x => x[1])) : -1;
+  $("swLaps").innerHTML = laps.reverse().map(([i, d]) => `<div class="lap ${d === best ? "best" : d === worst ? "worst" : ""}"><span>Lap ${i + 1}</span><span>${swFmt(d)}</span></div>`).join("");
+}
+function swInit() {
+  try { SW = Object.assign(SW, JSON.parse(localStorage.getItem("jsw") || "{}")); } catch (e) {}
+  $("swGo").onclick = () => { if (SW.run) { SW.acc += Date.now() - SW.start; SW.run = false; } else { SW.start = Date.now(); SW.run = true; } swSave(); swDraw(); };
+  $("swLap").onclick = () => { if (SW.run) SW.laps.push(swNow()); else SW = { start: 0, acc: 0, run: false, laps: [] }; swSave(); swDraw(); };
+  swDraw();
+  (function loop() { const el = $("swTime"); if (el && !el.closest("[hidden]")) el.innerHTML = swFmt(swNow()); requestAnimationFrame(loop); })();
+}
+
+// ---- Notas ----
+function notesInit() {
+  const n = $("notes"); n.value = localStorage.getItem("jnotes") || "";
+  let t; n.oninput = () => { clearTimeout(t); $("notesSaved").textContent = "…"; t = setTimeout(() => { try { localStorage.setItem("jnotes", n.value); } catch (e) {} $("notesSaved").textContent = "✓ saved"; }, 400); };
+}
+
+// ================= Timer (estilo Apple) =================
+let T = null, tFetchedAt = 0, chime = null;
+const R = 74, C = 2 * Math.PI * R;
+const fmtLeft = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return (h ? h + ":" + pad(m) : pad(m)) + ":" + pad(s); };
+function leftNow() { if (!T) return 0; return T.state === "running" ? T.leftMs - (performance.now() - tFetchedAt) : T.leftMs; }
+function ringSVG(frac) { return `<svg width="170" height="170"><circle class="bg" cx="85" cy="85" r="${R}" fill="none" stroke-width="9"/>
+  <circle class="fg" id="tArc" cx="85" cy="85" r="${R}" fill="none" stroke-width="9" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - frac)}"/></svg>`; }
+function renderTimer(force) {
+  const box = $("timerBody"); if (!box || !T) return;
+  const st = T.state;
+  if (box.dataset.state === st && !force) return;
+  box.dataset.state = st;
+  $("tState").textContent = st === "running" ? "running" : st === "paused" ? "paused" : st === "done" ? "time's up!" : "";
+  if (st === "idle") {
+    const last = JSON.parse(localStorage.getItem("jt") || '{"h":0,"m":5,"s":0}');
+    box.innerHTML = `<div class="timer"><div class="ring">${ringSVG(1)}<div class="mid"><div class="left" id="tPrev">${fmtLeft((last.h * 3600 + last.m * 60 + last.s) * 1000)}</div><div class="bell">set a time</div></div></div>
+      <div class="tside"><div class="pick"><label><input id="tH" type="number" min="0" max="23" value="${last.h}">hours</label><span>:</span>
+        <label><input id="tM" type="number" min="0" max="59" value="${last.m}">min</label><span>:</span><label><input id="tS" type="number" min="0" max="59" value="${last.s}">sec</label></div>
+        <div class="chips">${[[1, "1 min"], [5, "5 min"], [10, "10 min"], [15, "15 min"], [25, "25 min"], [45, "45 min"], [60, "1 h"]].map(([m, l]) => `<button data-m="${m}">${l}</button>`).join("")}</div>
+        <input id="tLabel" placeholder="Label (e.g. Maths homework)" maxlength="40">
+        <div class="tbtns"><button class="cbtn cancel" disabled>Cancel</button><button class="cbtn start" id="tStart">Start</button></div></div></div>`;
+    const prev = () => { const h = +$("tH").value || 0, m = +$("tM").value || 0, s = +$("tS").value || 0; $("tPrev").textContent = fmtLeft((h * 3600 + m * 60 + s) * 1000); };
+    ["tH", "tM", "tS"].forEach(id => { $(id).oninput = prev; $(id).onfocus = e => e.target.select(); });
+    box.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { const m = +b.dataset.m; $("tH").value = Math.floor(m / 60); $("tM").value = m % 60; $("tS").value = 0; prev(); startTimer(); });
+    $("tStart").onclick = startTimer;
+  } else {
+    const done = st === "done";
+    box.innerHTML = `<div class="timer"><div class="ring ${done ? "done" : ""}">${ringSVG(done ? 1 : leftNow() / T.totalMs)}<div class="mid">
+      ${T.label ? `<div class="lab">${esc(T.label)}</div>` : ""}<div class="left" id="tLeft">${done ? "0:00" : fmtLeft(leftNow())}</div>
+      <div class="bell" id="tBell">${done ? "Time's up!" : st === "paused" ? "paused" : "🔔 " + hm(new Date(Date.now() + leftNow()))}</div></div></div>
+      <div class="tside"><div class="tbtns">${done ? `<button class="cbtn stop" id="tStop">Stop</button>` :
+        `<button class="cbtn cancel" id="tCancel">Cancel</button>${st === "running" ? `<button class="cbtn pause" id="tPause">Pause</button>` : `<button class="cbtn start" id="tResume">Resume</button>`}`}</div>
+      <div class="muted">${done ? "🔔 Your timer finished." : "Total " + fmtLeft(T.totalMs) + " · keeps running even if you close this window"}</div></div></div>`;
+    $("tCancel") && ($("tCancel").onclick = () => timerAct({ action: "cancel" }));
+    $("tPause") && ($("tPause").onclick = () => timerAct({ action: "pause" }));
+    $("tResume") && ($("tResume").onclick = () => timerAct({ action: "resume" }));
+    $("tStop") && ($("tStop").onclick = () => timerAct({ action: "dismiss" }));
+  }
+  if (st === "done") playChime(); else stopChime();
+}
+function startTimer() {
+  const h = +$("tH").value || 0, m = +$("tM").value || 0, s = +$("tS").value || 0, secs = h * 3600 + m * 60 + s;
+  if (secs < 1) return;
+  localStorage.setItem("jt", JSON.stringify({ h, m, s }));
+  timerAct({ action: "start", seconds: secs, label: $("tLabel").value });
+}
+async function timerAct(body) { try { T = await api("/api/timer", { method: "POST", body: JSON.stringify(body) }); tFetchedAt = performance.now(); renderTimer(true); } catch (e) {} }
+async function pollTimer() { try { const was = T?.state; T = await api("/api/timer"); tFetchedAt = performance.now(); if (T.state !== was) renderTimer(true); } catch (e) {} }
+function animTimer() {
+  if (T && T.state === "running" && $("tArc")) {
+    const left = leftNow();
+    $("tArc").style.strokeDashoffset = C * (1 - Math.max(0, left) / T.totalMs);
+    const l = $("tLeft"); if (l) l.textContent = fmtLeft(left);
+    if (left <= 0) pollTimer();
+  }
+  requestAnimationFrame(animTimer);
+}
+function playChime() {
+  if (chime) return;
+  try {
+    const ac = new AudioContext();
+    const ring = () => { [0, .18, .36].forEach((d, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = "sine"; o.frequency.value = [880, 1175, 1568][i];
+      g.gain.setValueAtTime(0, ac.currentTime + d); g.gain.linearRampToValueAtTime(.25, ac.currentTime + d + .02); g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + d + .5);
+      o.connect(g).connect(ac.destination); o.start(ac.currentTime + d); o.stop(ac.currentTime + d + .55); }); };
+    ring(); const iv = setInterval(ring, 1500); chime = { ac, iv };
+    setTimeout(stopChime, 60000);
+  } catch (e) {}
+}
+function stopChime() { if (chime) { clearInterval(chime.iv); chime.ac.close(); chime = null; } }
+
+// ================= Céu animado =================
+const sky = { cv: $("sky"), ctx: $("sky").getContext("2d"), w: 0, h: 0, mode: "", stars: [], drops: [], flakes: [], clouds: [], flash: 0, nextFlash: 0, shoot: null, t0: performance.now() };
+const forced = new URLSearchParams(location.search).get("scene"); // teste: ?scene=night-rain
+function sceneNow() {
+  if (forced) { const [a, b] = forced.split("-"); return { sky: a, cond: b || "clear" }; }
+  return { sky: S?.weather?.sky || (new Date().getHours() < 7 || new Date().getHours() >= 19 ? "night" : "day"), cond: S?.weather?.cond || "clear" };
+}
+const GRAD = {
+  day: { clear: ["#0d4f8c", "#0a3260", "#061a33"], partly: ["#1a4d7a", "#0f3155", "#071a30"], cloudy: ["#34495e", "#1f2d3d", "#0c1520"], fog: ["#465464", "#2a3440", "#111820"], rain: ["#283646", "#17212d", "#0a1018"], storm: ["#1d2430", "#11161e", "#06090e"], snow: ["#4a5a6c", "#2d3a48", "#141c26"] },
+  dawn: ["#1c2550", "#7a3d6a", "#d77a4a"], sunset: ["#141a42", "#6b2a5e", "#e0663a"],
+  night: ["#020611", "#071229", "#0c1a3a"]
+};
+function moonPhase() { const ref = Date.UTC(2000, 0, 6, 18, 14); return (((Date.now() - ref) / 864e5) % 29.530588853 + 29.530588853) % 29.530588853 / 29.530588853; }
+function setupSky() {
+  const { sky: k, cond } = sceneNow(), mode = k + "-" + cond;
+  const cv = sky.cv, dpr = Math.min(2, window.devicePixelRatio || 1);
+  sky.w = innerWidth; sky.h = innerHeight; cv.width = sky.w * dpr; cv.height = sky.h * dpr; sky.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (mode === sky.mode && sky.stars.length + sky.drops.length + sky.clouds.length) return;
+  sky.mode = mode;
+  let g = GRAD[k]; if (!Array.isArray(g)) g = g[cond] || g.clear;
+  if ((k === "dawn" || k === "sunset") && ["cloudy", "rain", "storm", "fog"].includes(cond)) g = ["#1b2232", "#3a2c40", "#6a4048"];
+  if (k === "night" && ["rain", "storm", "cloudy", "fog"].includes(cond)) g = ["#04070d", "#0a1019", "#121a26"];
+  document.documentElement.style.background = `linear-gradient(180deg,${g[0]} 0%,${g[1]} 55%,${g[2]} 100%) fixed`;
+  const R0 = (a, b) => a + Math.random() * (b - a);
+  sky.stars = k === "night" && !["rain", "storm", "fog"].includes(cond) ? Array.from({ length: cond === "cloudy" ? 50 : 170 }, () => ({ x: Math.random(), y: Math.random() * .75, r: R0(.4, 1.5), p: Math.random() * 6.28, s: R0(.5, 2) })) : [];
+  const nClouds = { partly: 5, cloudy: 9, fog: 10, rain: 10, storm: 11, snow: 8 }[cond] || 0;
+  sky.clouds = Array.from({ length: nClouds }, () => ({ x: Math.random() * 1.3 - .15, y: R0(.02, .45), sc: R0(.7, 1.6), v: R0(.004, .012), puffs: Array.from({ length: 6 }, () => [R0(-90, 90), R0(-18, 18), R0(28, 60)]) }));
+  sky.drops = ["rain", "storm"].includes(cond) ? Array.from({ length: cond === "storm" ? 380 : 260 }, () => ({ x: Math.random(), y: Math.random(), l: R0(10, 22), v: R0(.6, 1.1) })) : [];
+  sky.flakes = cond === "snow" ? Array.from({ length: 170 }, () => ({ x: Math.random(), y: Math.random(), r: R0(1, 3.2), v: R0(.03, .09), p: Math.random() * 6.28 })) : [];
+}
+function drawMoon(c, x, y, r) {
+  const p = moonPhase();
+  const glow = c.createRadialGradient(x, y, r * .8, x, y, r * 4); glow.addColorStop(0, "rgba(230,235,255,.22)"); glow.addColorStop(1, "rgba(230,235,255,0)");
+  c.fillStyle = glow; c.beginPath(); c.arc(x, y, r * 4, 0, 7); c.fill();
+  c.fillStyle = "#f2f0e6"; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  c.fillStyle = "rgba(200,196,180,.55)"; [[-.3, -.2, .18], [.25, .15, .22], [-.05, .4, .12], [.35, -.35, .1]].forEach(([a, b, s]) => { c.beginPath(); c.arc(x + a * r, y + b * r, s * r, 0, 7); c.fill(); });
+  // sombra da fase
+  const rx = r * Math.abs(Math.cos(2 * Math.PI * p)), waxing = p < .5;
+  c.fillStyle = "rgba(4,9,22,.9)"; c.beginPath();
+  if (waxing) { c.arc(x, y, r + .5, -Math.PI / 2, Math.PI / 2, true); c.ellipse(x, y, rx, r + .5, 0, Math.PI / 2, -Math.PI / 2, p < .25); }
+  else { c.arc(x, y, r + .5, -Math.PI / 2, Math.PI / 2, false); c.ellipse(x, y, rx, r + .5, 0, Math.PI / 2, -Math.PI / 2, p < .75); }
+  c.fill();
+}
+function drawCloud(c, cl, W, H, dark) {
+  const x = cl.x * W, y = cl.y * H;
+  for (const [dx, dy, r] of cl.puffs) {
+    const rr = r * cl.sc, g = c.createRadialGradient(x + dx * cl.sc, y + dy * cl.sc, 0, x + dx * cl.sc, y + dy * cl.sc, rr);
+    g.addColorStop(0, dark ? "rgba(70,80,95,.55)" : "rgba(235,242,250,.30)"); g.addColorStop(1, dark ? "rgba(70,80,95,0)" : "rgba(235,242,250,0)");
+    c.fillStyle = g; c.beginPath(); c.arc(x + dx * cl.sc, y + dy * cl.sc, rr, 0, 7); c.fill();
+  }
+}
+// lugar do sol / lua: no topo, entre o tempo e os botões (ou no cartão se não couber)
+let slot = { x: 600, y: 58, r: 1 }, slotAt = 0;
+function topSlot(now) {
+  if (now - slotAt > 800) {
+    slotAt = now;
+    const a = $("wx").getBoundingClientRect(), btn = document.querySelector(".top button:not([style*='none'])#chatBtn") || document.querySelector(".top button");
+    const bl = btn ? btn.getBoundingClientRect().left : innerWidth, top = document.querySelector(".top").getBoundingClientRect();
+    if (bl - a.right > 120) slot = { x: (a.right + bl) / 2, y: top.top + top.height / 2, r: 1 };
+    else { const card = document.querySelector(".main .card.full"); const r = card ? card.getBoundingClientRect() : { left: 0, width: innerWidth, top: 120, height: 80 };
+      slot = { x: r.left + r.width * .6, y: r.top + r.height / 2, r: 1 }; }
+  }
+  return slot;
+}
+function drawSky(now) {
+  const c = sky.ctx, W = sky.w, H = sky.h, t = (now - sky.t0) / 1000;
+  const { sky: k, cond } = sceneNow();
+  c.clearRect(0, 0, W, H);
+  // estrelas
+  for (const s of sky.stars) { const a = .35 + .65 * Math.abs(Math.sin(t * s.s + s.p)); c.fillStyle = `rgba(255,255,255,${a})`; c.beginPath(); c.arc(s.x * W, s.y * H, s.r, 0, 7); c.fill(); }
+  // estrela cadente
+  if (sky.stars.length > 100) {
+    if (!sky.shoot && Math.random() < .002) sky.shoot = { x: Math.random() * W * .7, y: Math.random() * H * .3, t: 0 };
+    if (sky.shoot) { const s = sky.shoot; s.t += .016; const x = s.x + s.t * 600, y = s.y + s.t * 250; const g = c.createLinearGradient(x, y, x - 90, y - 38);
+      g.addColorStop(0, "rgba(255,255,255,.9)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.strokeStyle = g; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 90, y - 38); c.stroke(); if (s.t > .9) sky.shoot = null; }
+  }
+  // lua / sol
+  const clearish = ["clear", "partly"].includes(cond);
+  if (k === "night" && cond !== "storm" && cond !== "rain") { const sl = topSlot(now); drawMoon(c, sl.x, sl.y, 32); }
+  if (k === "day" && clearish) {
+    const sl = topSlot(now), x = sl.x, y = sl.y, r = 40;
+    const g = c.createRadialGradient(x, y, r * .3, x, y, r * 6); g.addColorStop(0, "rgba(255,230,150,.55)"); g.addColorStop(.3, "rgba(255,200,90,.16)"); g.addColorStop(1, "rgba(255,200,90,0)");
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, r * 6, 0, 7); c.fill();
+    c.save(); c.translate(x, y); c.rotate(t * .05); c.strokeStyle = "rgba(255,220,140,.18)"; c.lineWidth = 3;
+    for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.beginPath(); c.moveTo(r * 1.4, 0); c.lineTo(r * 2.3 + 8 * Math.sin(t + i), 0); c.stroke(); } c.restore();
+    c.fillStyle = "#ffd76a"; c.beginPath(); c.arc(x, y, r * .75, 0, 7); c.fill();
+  }
+  if ((k === "sunset" || k === "dawn") && !["rain", "storm", "fog", "cloudy"].includes(cond)) {
+    const x = W * .72, y = H * .98, r = 70;
+    const g = c.createRadialGradient(x, y, r * .5, x, y, r * 5); g.addColorStop(0, "rgba(255,150,80,.55)"); g.addColorStop(1, "rgba(255,120,60,0)");
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, r * 5, 0, 7); c.fill();
+    c.fillStyle = "#ff9a4a"; c.beginPath(); c.arc(x, y, r, Math.PI, 0); c.fill();
+  }
+  // nuvens
+  const dark = ["rain", "storm", "cloudy", "fog", "snow"].includes(cond) || k === "night";
+  for (const cl of sky.clouds) { cl.x += cl.v / 60; if (cl.x > 1.25) cl.x = -.25; drawCloud(c, cl, W, H, dark); }
+  // chuva
+  if (sky.drops.length) {
+    c.strokeStyle = "rgba(180,210,245,.6)"; c.lineWidth = 1.5; c.beginPath();
+    for (const d of sky.drops) { d.y += d.v * .022; d.x -= .0016 * d.v; if (d.y > 1.02) { d.y = -.05; d.x = Math.random() * 1.1; }
+      const x = d.x * W, y = d.y * H; c.moveTo(x, y); c.lineTo(x - d.l * .25, y + d.l); }
+    c.stroke();
+  }
+  // neve
+  for (const f of sky.flakes) { f.y += f.v * .01; f.x += Math.sin(t + f.p) * .0004; if (f.y > 1.02) { f.y = -.02; f.x = Math.random(); }
+    c.fillStyle = "rgba(255,255,255,.8)"; c.beginPath(); c.arc(f.x * W, f.y * H, f.r, 0, 7); c.fill(); }
+  // relâmpago
+  if (cond === "storm") {
+    if (now > sky.nextFlash) { sky.flash = 1; sky.nextFlash = now + 5000 + Math.random() * 9000; }
+    if (sky.flash > 0) { c.fillStyle = `rgba(220,230,255,${sky.flash * .35})`; c.fillRect(0, 0, W, H); sky.flash -= .06; }
+  }
+  // neblina
+  if (cond === "fog") for (let i = 0; i < 4; i++) { const y = H * (.25 + i * .2), x = ((t * 12 * (i + 1)) % (W * 2)) - W;
+    const g = c.createLinearGradient(0, y - 40, 0, y + 40); g.addColorStop(0, "rgba(200,210,220,0)"); g.addColorStop(.5, "rgba(200,210,220,.10)"); g.addColorStop(1, "rgba(200,210,220,0)");
+    c.fillStyle = g; c.fillRect(x, y - 40, W * 2, 80); }
+}
+function skyLoop(now) {
+  if (!document.hidden && !(S && S.noAnimation && sky.drawnOnce)) { drawSky(now); sky.drawnOnce = true; }
+  requestAnimationFrame(skyLoop);
+}
+addEventListener("resize", () => { sky.mode = ""; setupSky(); });
+
+async function load() { try { S = await api("/api/summary");
+  if (S.onboarded === false) { location.replace("/welcome?k=" + K); return; }
+  if (S.theme && S.theme !== (document.documentElement.dataset.theme || "jarvis")) { location.reload(); return; } if (!T) { T = S.timer; tFetchedAt = performance.now(); } setupSky(); render(); } catch (e) {} }
+async function refresh() { await api("/api/refresh", { method: "POST" }).catch(() => {}); setTimeout(load, 300); setTimeout(load, 4000); }
+function openLink(u) { api("/api/open-url", { method: "POST", body: JSON.stringify({ url: u }) }); }
+function openSettings(hash) { api("/api/open-settings", { method: "POST", body: JSON.stringify({ hash: hash || "" }) }); }
+
+
+$("settings").onclick = () => openSettings("");
+// chat aberto / fechado (lembra a escolha)
+function setChat(open) {
+  document.querySelector(".wrap").classList.toggle("closed", !open);
+  $("chatBtn").classList.toggle("on", open);
+  try { localStorage.setItem("jchat", open ? "1" : "0"); } catch (e) {}
+}
+setChat(localStorage.getItem("jchat") !== "0");
+$("robotsBtn").onclick = () => api("/api/open-robots", { method: "POST" });
+$("chatBtn").onclick = () => setChat(document.querySelector(".wrap").classList.contains("closed"));
+$("robotBtn").innerHTML += JarvisRobot.svg(78);
+$("robotBtn").onclick = () => setChat(true);
+$("brand").onclick = () => { setChat(true); $("chatFrame").contentWindow.postMessage({ jarvis: "voice" }, location.origin); };
+// robozinho olha pra você de vez em quando
+setInterval(() => { const r = $("robotBtn").querySelector(".jrobot"); if (!r) return; JarvisRobot.set(r, "thinking"); setTimeout(() => JarvisRobot.set(r, "idle"), 1500); }, 14000);
+$("mini").onclick = async () => { await api("/api/mini", { method: "POST" }).catch(() => {}); window.close(); };
+setInterval(tick, 1000);
+let lastMin = -1; setInterval(() => { const m = new Date().getMinutes(); if (m !== lastMin) { lastMin = m; render(); } }, 1000);
+setupSky(); requestAnimationFrame(skyLoop); requestAnimationFrame(animTimer);
+load(); setInterval(load, 30000); setInterval(() => { if (T && (T.state === "running" || T.state === "done")) pollTimer(); else if (Math.random() < .2) pollTimer(); }, 1000);
+</script></body></html>

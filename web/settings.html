@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jarvis Settings</title><link rel="stylesheet" href="/jarvis.css"><script src="/robot.js"></script>
+<style>
+body{padding:0 0 90px}
+body{background:radial-gradient(100% 50% at 50% 0%,var(--deep),var(--bg) 70%) fixed}
+header{position:sticky;top:0;z-index:5;background:rgba(var(--b-rgb),.92);backdrop-filter:blur(6px);padding:16px 22px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+nav a{color:var(--dim);text-decoration:none;padding:5px 10px;font:600 10px var(--hud);letter-spacing:1.5px;text-transform:uppercase}
+nav a:hover{background:var(--panel2);color:var(--cyan)}
+main{max-width:860px;margin:0 auto;padding:6px 22px}
+section{padding:16px 18px;margin:18px 0}
+section h2{margin:0 0 6px;font:700 12px var(--hud);letter-spacing:2px;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 8px rgba(var(--c-rgb),.5)}
+label{display:block;margin:12px 0 5px;color:#a9c3d6;font-size:13px}
+.row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.row>*{flex:1;min-width:140px}
+.row>button{flex:0 0 auto}
+ol{margin:6px 0 0 18px;padding:0;color:var(--dim);font-size:13px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{text-align:left;font-weight:500;color:var(--dim);font-size:12px;padding:4px}
+td{padding:3px}
+td input,td select{padding:6px 8px}
+td.x{width:34px}
+td.x button{padding:4px 9px}
+.day-sep td{border-top:1px solid var(--line)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.box{background:var(--panel2);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px}
+#countdown{font-size:42px;font-weight:300;color:var(--cyan);text-align:center}
+.cities{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.cities button{text-align:left}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(var(--b-rgb),.94);border-top:1px solid var(--line2);padding:12px 22px;display:flex;align-items:center;gap:14px}
+footer #msg{flex:1}
+.pill{display:inline-block;font:600 12px var(--tech);letter-spacing:.5px;padding:0 8px;border:1px solid var(--line2);background:rgba(var(--c-rgb),.1);color:var(--cyan);margin-left:6px}
+.check{display:flex;gap:8px;align-items:center;margin-top:12px}
+.check input{width:auto}
+.prov{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.pv{cursor:pointer;padding:10px 12px;border:1px solid var(--line2);background:rgba(var(--p2-rgb),.35);transition:box-shadow .2s}
+.pv b{display:block;font:700 12px var(--hud);letter-spacing:1.2px;color:#fff}
+.pv span{font:500 13.5px var(--tech);color:var(--dim)}
+.pv:hover{box-shadow:0 0 14px rgba(var(--c-rgb),.3)}
+.pv.sel{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 18px rgba(var(--c-rgb),.4)}
+.pv.sel span{color:var(--cyan2)}
+h3.sub{font:700 10.5px var(--hud);letter-spacing:1.8px;color:var(--cyan2);margin:16px 0 4px;text-transform:uppercase}
+#mt td input,#mt td select{padding:6px 7px;font-size:13px}
+.cal{display:flex;gap:8px;margin-top:8px;align-items:center}
+.cal input:first-child{flex:0 0 200px}
+code{background:rgba(var(--p2-rgb),.6);padding:1px 6px;border:1px solid var(--line2);font-family:Consolas,monospace;font-size:12.5px}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.themes.small{grid-template-columns:repeat(3,1fr);margin-top:12px}
+.th{position:relative;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid rgba(var(--c-rgb),.25);
+  background:linear-gradient(135deg,rgba(var(--c-rgb),.16),rgba(var(--p-rgb),.9) 70%);color:var(--text);transition:transform .15s,box-shadow .2s}
+.th:hover{transform:translateY(-2px);box-shadow:0 0 18px rgba(var(--c-rgb),.35)}
+.th.sel{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 22px rgba(var(--c-rgb),.45)}
+.th.sel::after{content:"✓ ACTIVE";position:absolute;top:8px;right:10px;font:700 9px var(--hud);letter-spacing:1.5px;color:var(--cyan)}
+.th .nm{font:700 15px var(--hud);letter-spacing:2px;color:#fff}
+.th .ds{font:500 14px var(--tech);color:var(--cyan2);margin-top:2px}
+.th .sw{display:flex;gap:4px;margin-top:6px}.th .sw i{width:16px;height:6px;display:block}
+.themes.small .th{padding:10px}.themes.small .nm{font-size:11.5px;letter-spacing:1.2px}.themes.small .ds{font-size:12.5px}
+</style></head><body class="scan">
+<header><svg class="reactor" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke-opacity=".35" stroke-width="1" style="stroke:var(--cyan)"/><g class="r1"><circle cx="20" cy="20" r="15" fill="none" stroke-width="2" stroke-dasharray="10 5" style="stroke:var(--cyan)"/></g><g class="r2"><circle cx="20" cy="20" r="10.5" fill="none" stroke-width="1.5" stroke-dasharray="4 3" style="stroke:var(--cyan2)"/></g><circle class="core" cx="20" cy="20" r="5.5" style="fill:var(--core)"/></svg><h1><span>J.A.R.V.I.S.</span> Settings</h1>
+<nav><a href="#style">Style</a><a href="#classes">Classes</a><a href="#meetings">Meetings</a><a href="#alerts">Alerts</a><a href="#canvas">Homework</a><a href="#ai">AI helper</a><a href="#weather">Weather</a><a href="#general">General</a></nav></header>
+<main>
+
+<section class="hud" id="style">
+  <h2>🎨 Style</h2>
+  <div class="muted">Choose your assistant's look. Changes the colors, the arc reactor and the voice.</div>
+  <div class="themes" id="themesBig"></div>
+  <div class="themes small" id="themesSmall"></div>
+</section>
+
+<section class="hud" id="classes">
+  <h2>📅 My classes</h2>
+  <div class="muted">Jarvis uses this to show your <b>next class</b>. Type it in, or let the AI read it from your school portal.</div>
+  <div class="tools">
+    <button id="fromScreen">📸 Read my timetable from the screen</button>
+    <button id="fromFile">🖼 From a picture…</button>
+    <input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+    <button id="pasteList">📋 Paste a list…</button>
+    <button id="addRow">+ Add a class</button>
+    <button id="clearTT" class="danger">Clear all</button>
+  </div>
+  <div id="pasteBox" class="box" hidden>
+    <div class="muted">Paste one class per line, like <code>Mon 08:30-09:20 Maths | N310</code></div>
+    <textarea id="pasteText" rows="8" style="margin-top:8px;font-family:Consolas,monospace;font-size:13px" placeholder="Mon 08:30-09:20 Assembly | N2351"></textarea>
+    <div class="tools"><button id="pasteAdd" class="primary">Add these classes</button><button id="pasteCancel">Cancel</button></div>
+  </div>
+  <div id="ttStatus" class="box" hidden></div>
+  <table id="tt"><thead><tr><th style="width:110px">Day</th><th style="width:100px">Start</th><th style="width:100px">End</th><th>Subject</th><th style="width:130px">Room</th><th></th></tr></thead><tbody></tbody></table>
+  <div id="ttEmpty" class="muted" style="padding:10px 4px">No classes yet.</div>
+  <label style="margin-top:18px">Calendar links (optional, one per line, e.g. .ics / webcal:// links from the portal)</label>
+  <textarea id="ics" rows="2" placeholder="https://…/calendar.ics"></textarea>
+</section>
+
+<section class="hud" id="canvas">
+  <h2>📚 Homework (Canvas) <span id="canvasState" class="pill">checking…</span></h2>
+  <ol>
+    <li>Open <a href="#" id="openCanvas">Canvas</a> and log in.</li>
+    <li>Click your picture (<b>Account</b>) → <b>Settings</b>.</li>
+    <li>Scroll to <b>Approved Integrations</b> → <b>+ New Access Token</b> → Purpose: <i>Jarvis</i> → <b>Generate Token</b>.</li>
+    <li>Copy the long code and paste it below.</li>
+  </ol>
+  <div class="row">
+    <div><label>Canvas address</label><input id="canvasUrl"></div>
+  </div>
+  <div class="row">
+    <div><label>Canvas token <span id="tokSet" class="pill" hidden>saved ✓</span></label><input id="canvasToken" type="password" placeholder="paste the code here" autocomplete="off"></div>
+    <button id="testCanvas">Test</button>
+  </div>
+  <div id="canvasMsg" class="muted" style="margin-top:6px"></div>
+</section>
+
+<section class="hud" id="ai">
+  <h2>🤖 AI helper</h2>
+  <div class="muted">Pick the brain behind "Ask J.A.R.V.I.S.". Without any AI, Jarvis still answers the basics (next class, homework, weather, meetings, time, timers).</div>
+  <div class="prov" id="prov">
+    <div class="pv" data-p="claude"><b>Claude</b><span>Smartest · can see & control the screen · needs a paid API key</span></div>
+    <div class="pv" data-p="github"><b>GitHub AI ⭐</b><span>Free · strong (GPT-4.1) · uses your GitHub account · daily limit</span></div>
+    <div class="pv" data-p="ollama"><b>Free AI (Ollama)</b><span>Free · runs on your PC · simpler answers · no screen control</span></div>
+    <div class="pv" data-p="none"><b>No AI</b><span>Just the basics, works offline</span></div>
+  </div>
+  <div id="pClaude">
+    <div class="muted" style="margin-top:12px">Get a key at <a href="#" id="openConsole">console.anthropic.com</a> → <b>API Keys</b> → <b>Create Key</b>. Each message costs a little (billed to that account), so ask a parent if needed.</div>
+    <div class="row">
+      <div><label>Claude API key <span id="keySet" class="pill" hidden>saved ✓</span></label><input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off"></div>
+      <button id="clearKey" class="danger">Remove</button>
+    </div>
+  </div>
+  <div id="pGitHub" hidden>
+    <ol>
+      <li>Log in to <a href="#" data-u2="https://github.com">github.com</a>.</li>
+      <li>Open <a href="#" data-u2="https://github.com/settings/personal-access-tokens/new">New fine-grained token</a> (Settings → Developer settings → Personal access tokens → Fine-grained tokens).</li>
+      <li>Name: <i>Jarvis</i> · Expiration: up to 1 year · under <b>Permissions</b> → <b>Account permissions</b> → <b>Models</b> → <b>Read-only</b>.</li>
+      <li><b>Generate token</b>, copy it and paste it below, then press <b>Test</b>.</li>
+    </ol>
+    <div class="row">
+      <div><label>GitHub token <span id="ghSet" class="pill" hidden>saved ✓</span></label><input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off"></div>
+      <button id="testGh">Test</button>
+    </div>
+    <div class="row"><div><label>Model</label><select id="ghModel">
+      <option value="openai/gpt-4.1-mini">GPT-4.1 mini — fast, more uses per day (recommended)</option>
+      <option value="openai/gpt-4.1">GPT-4.1 — smartest, fewer uses per day</option>
+      <option value="openai/gpt-4o-mini">GPT-4o mini — fast</option>
+      <option value="openai/gpt-4o">GPT-4o</option>
+    </select></div></div>
+    <div id="ghMsg" class="muted" style="margin-top:6px"></div>
+  </div>
+  <div id="pOllama" hidden>
+    <ol>
+      <li>Download and install Ollama from <a href="#" id="openOllama">ollama.com</a> (free).</li>
+      <li>Open the <b>Command Prompt</b> and run: <code>ollama pull llama3.2</code> (≈2 GB, once).</li>
+      <li>Keep Ollama running, then press <b>Test</b>.</li>
+    </ol>
+    <div class="row">
+      <div><label>Model</label><input id="ollamaModel" placeholder="llama3.2"></div>
+      <button id="testOllama">Test</button>
+    </div>
+    <div id="ollamaMsg" class="muted" style="margin-top:6px"></div>
+    <div class="muted" style="margin-top:6px">Tip: for "Look at my screen" use a vision model like <code>llama3.2-vision</code> (bigger, needs a strong PC).</div>
+  </div>
+</section>
+
+<section class="hud" id="meetings">
+  <h2>📅 Meetings & calendars</h2>
+  <div class="muted">Your own meetings (like a call with Mom on Teams) and your Google (Gmail) or Outlook/Teams calendars. They show in the Jarvis window with a <b>Join</b> button, and Jarvis alerts you 10 minutes before.</div>
+  <h3 class="sub">My meetings</h3>
+  <table id="mt"><thead><tr><th>What</th><th style="width:120px">With</th><th style="width:96px">Repeat</th><th style="width:140px">Date / day</th><th style="width:96px">Start</th><th style="width:96px">End</th><th>Link (Teams, Meet, Zoom…)</th><th></th></tr></thead><tbody></tbody></table>
+  <div class="tools"><button id="addMeet">+ Add meeting</button></div>
+  <h3 class="sub">Connected calendars</h3>
+  <div id="cals"></div>
+  <div class="tools"><button id="addGoogle">+ Google / Gmail calendar</button><button id="addOutlook">+ Outlook / Teams calendar</button></div>
+  <div class="box" id="calHelp" hidden></div>
+</section>
+
+<section class="hud" id="weather">
+  <h2>🌤 Weather</h2>
+  <div class="row">
+    <div><label>City</label><input id="city" placeholder="Cascais"></div>
+    <button id="findCity">Search</button>
+  </div>
+  <div id="cities" class="cities"></div>
+  <div class="muted" id="coords" style="margin-top:6px"></div>
+</section>
+
+<section class="hud" id="alerts">
+  <h2>🔔 Alerts</h2>
+  <div class="muted">Jarvis shows a Windows notification for these:</div>
+  <label class="check"><input type="checkbox" id="alRain"> ☔ Rain — when it starts raining or rain is likely in the next 3 hours</label>
+  <label class="check"><input type="checkbox" id="alHw"> 📚 Homework — 1 hour before it's due, "due tonight", and at 17:00 for tomorrow's</label>
+  <label class="check"><input type="checkbox" id="alMeet"> 📅 Meetings — 10 minutes before, with a Join button</label>
+  <label class="check"><input type="checkbox" id="alCls"> 🏫 Classes — 5 minutes before your next class</label>
+  <label class="check"><input type="checkbox" id="anim"> 🌦 Animated sky in the Jarvis window (rain, sun, clouds, sunset, moon)</label>
+</section>
+
+<section class="hud" id="general">
+  <h2>⌨ General</h2>
+  <div class="row">
+    <div><label>What should J.A.R.V.I.S. call you?</label><input id="userName" maxlength="30" placeholder="Your name"></div>
+    <div><label>Use J.A.R.V.I.S. for</label><select id="use"><option value="school">🎒 School</option><option value="work">💼 Work</option></select></div>
+  </div>
+  <div class="tools"><button id="redoTutorial">↺ Run the welcome tutorial again</button></div>
+  <div class="row">
+    <div><label>Shortcut to show / hide Jarvis</label><input id="hotkey" placeholder="Ctrl+Shift+L"></div>
+  </div>
+  <div class="muted" style="margin-top:6px">Examples: Ctrl+Shift+L · Ctrl+Alt+J · Win+Shift+J</div>
+  <label class="check"><input type="checkbox" id="startWin"> <span id="startLbl">Start Jarvis when Windows starts</span></label>
+  <div class="tools" id="quitBox" hidden><button id="quit" class="danger">Quit Jarvis</button></div>
+  <div class="muted" style="margin-top:12px">On the Jarvis box: drag it anywhere to move it · <b>Ctrl + mouse wheel</b> or the <b>− / +</b> buttons to make it smaller or bigger.</div>
+</section>
+</main>
+
+<footer><span id="msg" class="muted"></span><button id="cancel">Close</button><button id="save" class="primary">Save</button></footer>
+
+<script>
+const K = new URLSearchParams(location.search).get("k");
+const api = (path, opts = {}) => fetch(path, { ...opts, headers: { "X-Jarvis-Key": K, "Content-Type": "application/json", ...(opts.headers || {}) } })
+  .then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || ("Error " + r.status)); return j; });
+const $ = id => document.getElementById(id);
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+let S = null, lat = 0, lon = 0, dirty = false, theme = "jarvis";
+const THEMES = [
+  { id: "jarvis", nm: ["J", "A", "R", "V", "I", "S"].join(".") + ".", ds: "Classic blue · male voice", big: true, sw: ["#3fd4ff", "#0a8fd6", "#0a2340"] },
+  { id: "friday", nm: "F.R.I.D.A.Y.", ds: "Pink · female voice · heart reactor 💗", big: true, sw: ["#ff5fb7", "#ffb3dc", "#3d0f36"] },
+  { id: "ironman", nm: "Mark III", ds: "Iron Man red & gold", sw: ["#ffc94a", "#ff4a3d", "#3d0d0a"] },
+  { id: "emerald", nm: "Emerald", ds: "Hacker green", sw: ["#34f5a4", "#0b9b63", "#073a24"] },
+  { id: "galaxy", nm: "Galaxy", ds: "Purple space", sw: ["#a98bff", "#7ee8ff", "#25155e"] },
+];
+function drawThemes() {
+  for (const [box, big] of [["themesBig", true], ["themesSmall", false]]) {
+    $(box).innerHTML = "";
+    THEMES.filter(t => !!t.big === big).forEach(t => {
+      const d = document.createElement("div");
+      d.className = "th" + (t.id === theme ? " sel" : ""); d.dataset.theme = t.id;
+      d.innerHTML = `${JarvisRobot.svg(big ? 66 : 46)}<div><div class="nm">${t.nm}</div><div class="ds">${t.ds}</div>
+        <div class="sw">${t.sw.map(c => `<i style="background:${c}"></i>`).join("")}</div></div>`;
+      d.onclick = () => { theme = t.id; document.documentElement.dataset.theme = t.id; drawThemes(); dirty = true;
+        msg("Looks good? Press Save to keep this style.", "warn"); };
+      $(box).appendChild(d);
+    });
+  }
+}
+
+function msg(t, cls = "muted") { $("msg").className = cls; $("msg").textContent = t; }
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function normDay(d) { d = String(d || "").slice(0, 3).toLowerCase(); const m = { seg: "Mon", ter: "Tue", qua: "Wed", qui: "Thu", sex: "Fri", sab: "Sat", "sáb": "Sat", dom: "Sun" }; return m[d] || DAYS.find(x => x.toLowerCase() === d) || "Mon"; }
+function pad(t) { const m = String(t || "").match(/(\d{1,2})[:h.](\d{2})/); return m ? m[1].padStart(2, "0") + ":" + m[2] : ""; }
+
+function addRow(sl = {}) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td><select>${DAYS.map(d => `<option ${normDay(sl.day) === d ? "selected" : ""}>${d}</option>`).join("")}</select></td>
+    <td><input type="time" value="${esc(pad(sl.start))}"></td><td><input type="time" value="${esc(pad(sl.end))}"></td>
+    <td><input value="${esc(sl.subject)}" placeholder="Maths"></td><td><input value="${esc(sl.room)}" placeholder="Room"></td>
+    <td class="x"><button class="danger" title="Remove">✕</button></td>`;
+  tr.querySelector("button").onclick = () => { tr.remove(); refreshEmpty(); dirty = true; };
+  tr.addEventListener("input", () => dirty = true);
+  $("tt").tBodies[0].appendChild(tr); refreshEmpty();
+}
+function readRows() {
+  return [...$("tt").tBodies[0].rows].map(tr => {
+    const [d, s, e, sub, room] = tr.querySelectorAll("select,input");
+    return { day: d.value, start: s.value, end: e.value, subject: sub.value.trim(), room: room.value.trim() };
+  }).filter(r => r.subject);
+}
+function sortRows() {
+  const rows = readRows().sort((a, b) => DAYS.indexOf(a.day) - DAYS.indexOf(b.day) || a.start.localeCompare(b.start));
+  $("tt").tBodies[0].innerHTML = ""; rows.forEach(addRow);
+}
+function refreshEmpty() { $("ttEmpty").hidden = $("tt").tBodies[0].rows.length > 0; }
+
+async function load() {
+  S = await api("/api/settings");
+  $("tt").tBodies[0].innerHTML = "";
+  (S.timetable || []).forEach(addRow); refreshEmpty();
+  $("ics").value = (S.ics || []).join("\n");
+  $("canvasUrl").value = S.canvasUrl; $("tokSet").hidden = !S.canvasTokenSet;
+  $("keySet").hidden = !S.apiKeySet;
+  $("city").value = S.city; lat = S.lat; lon = S.lon; showCoords();
+  $("hotkey").value = S.hotkey; $("startWin").checked = S.startWithWindows;
+  $("userName").value = S.userName || ""; $("use").value = S.use || "school";
+  if (S.platform === "mac") { $("hotkey").closest(".row").hidden = true; $("hotkey").closest("section").querySelector(".muted").hidden = true;
+    $("startLbl").textContent = "Start Jarvis when I log in to my Mac"; $("quitBox").hidden = false; }
+  theme = S.theme || "jarvis"; document.documentElement.dataset.theme = theme; drawThemes();
+  setProv(S.aiProvider || "claude"); $("ollamaModel").value = S.ollamaModel || "llama3.2";
+  $("ghSet").hidden = !S.githubTokenSet; $("ghModel").value = S.githubModel || "openai/gpt-4.1-mini";
+  $("mt").tBodies[0].innerHTML = ""; (S.meetings || []).forEach(meetRow);
+  $("cals").innerHTML = ""; (S.calendars || []).forEach(calRow);
+  $("alMeet").checked = !S.noAlertMeetings;
+  $("alRain").checked = !S.noAlertRain; $("alHw").checked = !S.noAlertHomework; $("alCls").checked = !S.noAlertClasses; $("anim").checked = !S.noAnimation;
+  testCanvas(true);
+  dirty = false;
+}
+function showCoords() { $("coords").textContent = `Location: ${(+lat).toFixed(3)}, ${(+lon).toFixed(3)}`; }
+
+async function save() {
+  msg("Saving…");
+  const body = {
+    canvasUrl: $("canvasUrl").value, canvasToken: $("canvasToken").value, ics: $("ics").value.split(/\s+/).filter(Boolean),
+    city: $("city").value, lat, lon, hotkey: $("hotkey").value, timetable: readRows(), apiKey: $("apiKey").value,
+    clearApiKey: clearKey, startWithWindows: $("startWin").checked,
+    theme, userName: $("userName").value.trim(), use: $("use").value, aiProvider: provider, ollamaModel: $("ollamaModel").value.trim(), githubToken: $("ghToken").value.trim(), githubModel: $("ghModel").value, meetings: readMeets(), calendars: readCals(), noAlertMeetings: !$("alMeet").checked,
+    noAlertRain: !$("alRain").checked, noAlertHomework: !$("alHw").checked, noAlertClasses: !$("alCls").checked, noAnimation: !$("anim").checked
+  };
+  try {
+    const themeChanged = (S.theme || "jarvis") !== theme;
+    await api("/api/settings", { method: "POST", body: JSON.stringify(body) });
+    if (themeChanged) { location.reload(); return; }
+    $("canvasToken").value = ""; $("apiKey").value = ""; $("ghToken").value = ""; clearKey = false;
+    await load(); sortRows(); msg("✓ Saved. Jarvis is updating.", "ok"); dirty = false;
+  } catch (e) { msg(e.message, "err"); }
+}
+
+async function testCanvas(silent) {
+  const st = $("canvasState");
+  if (!silent) $("canvasMsg").textContent = "Testing…";
+  try {
+    const r = await api("/api/test-canvas", { method: "POST", body: JSON.stringify({ url: $("canvasUrl").value, token: $("canvasToken").value }) });
+    const map = { ok: ["connected ✓", "ok"], notoken: ["no token yet", "warn"], badtoken: ["token not accepted", "err"], error: ["can't connect", "err"] };
+    const [t, c] = map[r.state] || ["?", "muted"];
+    st.textContent = t; st.className = "pill " + c;
+    $("canvasMsg").textContent = r.state === "ok" ? `Works! Found ${r.homework} homework item(s) for the next days.` :
+      r.state === "notoken" ? "Follow the steps above and paste the token." :
+      r.state === "badtoken" ? "Canvas didn't accept the token. Create a new one and paste it." : "Couldn't reach Canvas " + (r.message || "");
+  } catch (e) { $("canvasMsg").textContent = e.message; }
+}
+
+function mergeClasses(list, note) {
+  const box = $("ttStatus"); box.hidden = false;
+  if (!list.length) { box.innerHTML = `<span class="warn">No classes found.</span> ${esc(note || "Make sure the timetable is fully visible and try again.")}`; return; }
+  const replace = readRows().length === 0 || confirm(`Found ${list.length} classes.\n\nOK = replace my current classes\nCancel = add them to my current classes`);
+  if (replace) $("tt").tBodies[0].innerHTML = "";
+  list.forEach(addRow); sortRows(); dirty = true;
+  box.innerHTML = `<span class="ok">✓ Added ${list.length} classes.</span> Check them below, fix anything wrong, then press <b>Save</b>.`;
+}
+
+$("fromScreen").onclick = async () => {
+  const box = $("ttStatus"); box.hidden = false;
+  box.innerHTML = `<div>Open your timetable in the browser now (switch with <b>Alt+Tab</b>). Jarvis takes a picture in:</div><div id="countdown">8</div>`;
+  let n = 8; const t = setInterval(() => { n--; const c = $("countdown"); if (c) c.textContent = n > 0 ? n : "📸"; if (n <= 0) clearInterval(t); }, 1000);
+  $("fromScreen").disabled = true;
+  try {
+    const r = await api("/api/timetable/from-screen?delay=8", { method: "POST" });
+    clearInterval(t); window.focus(); mergeClasses(r.classes || [], r.note);
+  } catch (e) { clearInterval(t); box.innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  $("fromScreen").disabled = false;
+};
+$("fromFile").onclick = () => $("file").click();
+$("file").onchange = async () => {
+  const f = $("file").files[0]; if (!f) return;
+  const box = $("ttStatus"); box.hidden = false; box.textContent = "Reading the picture… (can take ~30 seconds)";
+  const data = await new Promise(res => { const rd = new FileReader(); rd.onload = () => res(rd.result.split(",")[1]); rd.readAsDataURL(f); });
+  try { const r = await api("/api/timetable/from-image", { method: "POST", body: JSON.stringify({ data, type: f.type }) }); mergeClasses(r.classes || [], r.note); }
+  catch (e) { box.innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  $("file").value = "";
+};
+function parseList(text) {
+  const out = [], bad = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const l = raw.trim(); if (!l || l.startsWith("#")) continue;
+    const m = l.match(/^(\S+)\s+(\d{1,2})[:h.](\d{2})\s*[-–]\s*(\d{1,2})[:h.](\d{2})\s+(.+)$/);
+    if (!m) { bad.push(l); continue; }
+    const [subject, room = ""] = m[6].split("|").map(x => x.trim());
+    out.push({ day: normDay(m[1]), start: m[2] + ":" + m[3], end: m[4] + ":" + m[5], subject, room });
+  }
+  return { out, bad };
+}
+$("pasteList").onclick = () => { $("pasteBox").hidden = false; $("pasteText").focus(); };
+$("pasteCancel").onclick = () => { $("pasteBox").hidden = true; };
+$("pasteAdd").onclick = () => {
+  const { out, bad } = parseList($("pasteText").value);
+  if (!out.length) { $("ttStatus").hidden = false; $("ttStatus").innerHTML = `<span class="err">No classes found. Each line should look like: Mon 08:30-09:20 Maths | N310</span>`; return; }
+  mergeClasses(out, "");
+  if (bad.length) $("ttStatus").innerHTML += `<br><span class="warn">Skipped ${bad.length} line(s) I didn't understand: ${esc(bad.slice(0, 3).join(" · "))}</span>`;
+  $("pasteBox").hidden = true; $("pasteText").value = "";
+};
+// ---- IA ----
+let provider = "claude";
+function setProv(p) { provider = p; document.querySelectorAll(".pv").forEach(x => x.classList.toggle("sel", x.dataset.p === p));
+  $("pClaude").hidden = p !== "claude"; $("pOllama").hidden = p !== "ollama"; $("pGitHub").hidden = p !== "github"; }
+document.querySelectorAll("[data-u2]").forEach(a => a.onclick = e => { e.preventDefault(); openUrl(a.dataset.u2); });
+$("testGh").onclick = async () => {
+  $("ghMsg").textContent = "Asking GitHub…";
+  const r = await api("/api/test-github", { method: "POST", body: JSON.stringify({ token: $("ghToken").value, model: $("ghModel").value }) }).catch(e => ({ ok: false, message: e.message }));
+  $("ghMsg").innerHTML = r.ok ? `<span class="ok">✓ Working! GitHub AI said: "${esc(r.message)}"</span> Press Save.` : `<span class="err">${esc(r.message)}</span>`;
+};
+document.querySelectorAll(".pv").forEach(x => x.onclick = () => { setProv(x.dataset.p); dirty = true; });
+$("testOllama").onclick = async () => {
+  $("ollamaMsg").textContent = "Checking…";
+  const r = await api("/api/test-ollama").catch(() => ({ running: false }));
+  const want = $("ollamaModel").value.trim() || "llama3.2";
+  if (!r.running) { $("ollamaMsg").innerHTML = `<span class="err">Ollama isn't running.</span> Install it and open it, then try again.`; return; }
+  const has = (r.models || []).some(m => m === want || m.startsWith(want + ":"));
+  $("ollamaMsg").innerHTML = has ? `<span class="ok">✓ Working! Model ${esc(want)} is ready.</span>` :
+    `<span class="warn">Ollama is running, but "${esc(want)}" isn't downloaded.</span> Run <code>ollama pull ${esc(want)}</code>` + (r.models.length ? ` · You have: ${esc(r.models.join(", "))}` : "");
+};
+// ---- Reuniões ----
+function meetRow(m = {}) {
+  const tr = document.createElement("tr");
+  const rep = m.repeat === "weekly" ? "weekly" : "once";
+  tr.innerHTML = `<td><input value="${esc(m.title)}" placeholder="Call with Mom"></td><td><input value="${esc(m.with)}" placeholder="Mom"></td>
+    <td><select><option value="once" ${rep === "once" ? "selected" : ""}>Once</option><option value="weekly" ${rep === "weekly" ? "selected" : ""}>Weekly</option></select></td>
+    <td class="dd"></td><td><input type="time" value="${esc(pad(m.start))}"></td><td><input type="time" value="${esc(pad(m.end))}"></td>
+    <td><input value="${esc(m.link)}" placeholder="https://teams.microsoft.com/…"></td><td class="x"><button class="danger" title="Remove">✕</button></td>`;
+  const dd = tr.querySelector(".dd"), sel = tr.querySelector("select");
+  const draw = () => { dd.innerHTML = sel.value === "weekly" ? `<select>${DAYS.map(d => `<option ${normDay(m.day) === d ? "selected" : ""}>${d}</option>`).join("")}</select>`
+    : `<input type="date" value="${esc(m.date || new Date().toISOString().slice(0, 10))}">`; };
+  sel.onchange = () => { draw(); dirty = true; }; draw();
+  tr.querySelector("button").onclick = () => { tr.remove(); dirty = true; };
+  $("mt").tBodies[0].appendChild(tr);
+}
+function readMeets() {
+  return [...$("mt").tBodies[0].rows].map(tr => {
+    const i = tr.querySelectorAll("input,select");
+    const rep = i[2].value, dd = tr.querySelector(".dd").firstElementChild;
+    return { title: i[0].value.trim(), with: i[1].value.trim(), repeat: rep, date: rep === "once" ? dd.value : "", day: rep === "weekly" ? dd.value : "",
+      start: tr.querySelectorAll("input[type=time]")[0].value, end: tr.querySelectorAll("input[type=time]")[1].value, link: tr.querySelector("td:nth-child(7) input").value.trim() };
+  }).filter(m => m.title && m.start);
+}
+$("addMeet").onclick = () => { meetRow({ repeat: "once" }); dirty = true; };
+function calRow(c = {}) {
+  const d = document.createElement("div"); d.className = "cal";
+  d.innerHTML = `<input value="${esc(c.name)}" placeholder="Name (e.g. Mom's Gmail)"><input value="${esc(c.url)}" placeholder="https://calendar.google.com/…/basic.ics"><button class="danger">✕</button>`;
+  d.querySelector("button").onclick = () => { d.remove(); dirty = true; };
+  $("cals").appendChild(d);
+}
+function readCals() { return [...$("cals").querySelectorAll(".cal")].map(d => { const i = d.querySelectorAll("input"); return { name: i[0].value.trim(), url: i[1].value.trim() }; }).filter(c => c.url); }
+$("addGoogle").onclick = () => { calRow({ name: "Gmail" }); dirty = true; $("calHelp").hidden = false; $("calHelp").innerHTML = `<b>Google / Gmail calendar:</b>
+  <ol><li>On a computer, open <a href="#" data-u="https://calendar.google.com/calendar/r/settings">Google Calendar settings</a>.</li>
+  <li>On the left, under <b>Settings for my calendars</b>, click your calendar.</li>
+  <li>Scroll to <b>Integrate calendar</b> → copy the <b>Secret address in iCal format</b>.</li><li>Paste it in the new line above and press <b>Save</b>.</li></ol>`; links(); };
+$("addOutlook").onclick = () => { calRow({ name: "Teams / Outlook" }); dirty = true; $("calHelp").hidden = false; $("calHelp").innerHTML = `<b>Outlook / Teams calendar</b> (Teams meetings are in the Outlook calendar):
+  <ol><li>Open <a href="#" data-u="https://outlook.office.com/calendar/options/calendar/SharedCalendars">Outlook calendar settings</a> (or outlook.live.com for personal accounts).</li>
+  <li>Go to <b>Calendar → Shared calendars → Publish a calendar</b>.</li>
+  <li>Choose the calendar and <b>Can view all details</b> → <b>Publish</b>.</li><li>Copy the <b>ICS</b> link, paste it in the new line above and press <b>Save</b>.</li></ol>
+  <span class="muted">If "Publish" isn't there, your school/work account doesn't allow it — ask Mom/Dad to share theirs, or add the meetings by hand above.</span>`; links(); };
+function links() { document.querySelectorAll("[data-u]").forEach(a => a.onclick = e => { e.preventDefault(); openUrl(a.dataset.u); }); }
+
+$("addRow").onclick = () => { addRow({ day: "Mon" }); dirty = true; };
+$("clearTT").onclick = () => { if (confirm("Remove all classes?")) { $("tt").tBodies[0].innerHTML = ""; refreshEmpty(); dirty = true; } };
+$("testCanvas").onclick = () => testCanvas(false);
+let clearKey = false;
+$("clearKey").onclick = () => { clearKey = true; $("apiKey").value = ""; $("keySet").hidden = true; msg("The AI key will be removed when you press Save."); };
+$("findCity").onclick = async () => {
+  const box = $("cities"); box.innerHTML = "Searching…";
+  try {
+    const list = await api("/api/geocode?q=" + encodeURIComponent($("city").value));
+    box.innerHTML = list && list.length ? "" : "Not found.";
+    (list || []).forEach(c => { const b = document.createElement("button"); b.textContent = [c.name, c.admin1, c.country].filter(Boolean).join(", ");
+      b.onclick = () => { $("city").value = c.name; lat = c.latitude; lon = c.longitude; box.innerHTML = ""; showCoords(); dirty = true; }; box.appendChild(b); });
+  } catch (e) { box.textContent = e.message; }
+};
+$("city").addEventListener("keydown", e => { if (e.key === "Enter") $("findCity").click(); });
+const openUrl = u => api("/api/open-url", { method: "POST", body: JSON.stringify({ url: u }) }).catch(e => msg(e.message, "err"));
+$("openCanvas").onclick = e => { e.preventDefault(); openUrl($("canvasUrl").value); };
+$("openConsole").onclick = e => { e.preventDefault(); openUrl("https://console.anthropic.com/settings/keys"); };
+$("openOllama").onclick = e => { e.preventDefault(); openUrl("https://ollama.com/download"); };
+$("save").onclick = save;
+$("redoTutorial").onclick = () => { location.href = "/welcome?k=" + K; };
+$("quit").onclick = async () => { if (confirm("Quit Jarvis? (Open it again from Applications)")) { await api("/api/quit", { method: "POST" }).catch(() => {}); window.close(); } };
+$("cancel").onclick = () => { if (!dirty || confirm("Close without saving?")) window.close(); };
+document.addEventListener("input", () => dirty = true);
+document.addEventListener("keydown", e => { if (e.ctrlKey && e.key.toLowerCase() === "s") { e.preventDefault(); save(); } });
+load().catch(e => msg(e.message, "err"));
+if (location.hash) setTimeout(() => document.querySelector(location.hash)?.scrollIntoView(), 300);
+</script></body></html>
