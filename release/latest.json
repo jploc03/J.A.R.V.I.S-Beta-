@@ -1,6 +1,6 @@
 {
-  "version": "4.2",
-  "notes": "The free GitHub AI is now the default and easy to turn on (Turn on button, Create my token button, token field in the tutorial).",
+  "version": "4.3",
+  "notes": "Fixed the GitHub AI error: Jarvis now tries GitHub's other address and other models automatically, and shows the real error if it still fails.",
   "windows": "Jarvis.exe",
   "mac": "Jarvis-mac.zip"
 }

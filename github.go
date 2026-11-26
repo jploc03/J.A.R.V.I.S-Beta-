@@ -13,11 +13,12 @@ import (
 	"time"
 )
 
-const (
+var (
 	ghEndpoint       = "https://models.github.ai/inference/chat/completions"
 	ghLegacyEndpoint = "https://models.inference.ai.azure.com/chat/completions"
-	ghDefaultModel   = "openai/gpt-4.1-mini"
 )
+
+const ghDefaultModel = "openai/gpt-4.1-mini"
 
 func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 	if strings.TrimSpace(token) == "" {
@@ -40,11 +41,12 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 		out = append(out, map[string]any{"role": m.Role, "content": parts})
 	}
 	try := func(url, mdl string) (string, int, error) {
-		body, _ := json.Marshal(map[string]any{"model": mdl, "messages": out, "max_tokens": 2000})
+		body, _ := json.Marshal(map[string]any{"model": mdl, "messages": out})
 		req, _ := http.NewRequest("POST", url, bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(token))
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Accept", "application/vnd.github+json")
+		req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 		cl := &http.Client{Timeout: 3 * time.Minute}
 		resp, err := cl.Do(req)
 		if err != nil {
@@ -54,7 +56,10 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 		b, _ := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
 		if resp.StatusCode != 200 {
 			var e struct {
-				Error struct{ Message string } `json:"error"`
+				Error struct {
+					Message string `json:"message"`
+					Code    string `json:"code"`
+				} `json:"error"`
 				Message string `json:"message"`
 			}
 			_ = json.Unmarshal(b, &e)
@@ -62,42 +67,103 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 			if msg == "" {
 				msg = e.Message
 			}
+			if msg == "" {
+				msg = snippet(b)
+			}
+			if e.Error.Code != "" && !strings.Contains(msg, e.Error.Code) {
+				msg = e.Error.Code + ": " + msg
+			}
 			return msg, resp.StatusCode, nil
 		}
 		var r struct {
 			Choices []struct {
-				Message struct{ Content string } `json:"message"`
+				Message struct {
+					Content any `json:"content"`
+				} `json:"message"`
 			} `json:"choices"`
 		}
 		if err := json.Unmarshal(b, &r); err != nil || len(r.Choices) == 0 {
-			return "", 500, nil
+			return "Unexpected reply: " + snippet(b), -1, nil
 		}
-		return strings.TrimSpace(r.Choices[0].Message.Content), 200, nil
+		txt := ""
+		switch c := r.Choices[0].Message.Content.(type) {
+		case string:
+			txt = c
+		case []any:
+			for _, p := range c {
+				if pm, ok := p.(map[string]any); ok {
+					if s, ok := pm["text"].(string); ok {
+						txt += s
+					}
+				}
+			}
+		}
+		txt = strings.TrimSpace(txt)
+		if txt == "" {
+			return "Empty reply: " + snippet(b), -1, nil
+		}
+		return txt, 200, nil
 	}
-	ans, code, err := try(ghEndpoint, model)
-	if err != nil || code == 404 {
-		// endereço antigo do GitHub Models (nomes sem "openai/")
-		short := model
-		if i := strings.LastIndex(short, "/"); i >= 0 {
-			short = short[i+1:]
+	short := func(m string) string {
+		if i := strings.LastIndex(m, "/"); i >= 0 {
+			return m[i+1:]
 		}
-		if a2, c2, e2 := try(ghLegacyEndpoint, short); e2 == nil && c2 == 200 {
-			return a2, nil
-		} else if err != nil {
-			return "", errors.New("Couldn't reach GitHub's AI. Check your internet.")
-		} else {
-			ans, code = a2, c2
+		return m
+	}
+	// tentativas: modelo escolhido nos dois endereços, depois modelos de reserva
+	type attempt struct{ url, model string }
+	var plan []attempt
+	seen := map[string]bool{}
+	for _, m := range []string{model, ghDefaultModel, "openai/gpt-4o-mini", "openai/gpt-4.1"} {
+		if seen[m] {
+			continue
+		}
+		seen[m] = true
+		plan = append(plan, attempt{ghEndpoint, m}, attempt{ghLegacyEndpoint, short(m)})
+	}
+	var firstMsg string
+	firstCode := 0
+	netFails := 0
+	for _, a := range plan {
+		ans, code, err := try(a.url, a.model)
+		if err != nil {
+			netFails++
+			continue
+		}
+		if code == 200 {
+			return ans, nil
+		}
+		if firstCode == 0 {
+			firstCode, firstMsg = code, ans
+		}
+		switch code {
+		case 401:
+			return "", errors.New("GitHub didn't accept the token (401). Create a new one with the \"Models\" permission set to Read-only (steps in Settings). " + ans)
+		case 429:
+			return "", errors.New("You reached GitHub's free limit for now. Try again later (or tomorrow), or pick a smaller model. " + ans)
 		}
 	}
-	switch code {
-	case 200:
-		return ans, nil
-	case 401, 403:
-		return "", errors.New("GitHub didn't accept the token. Create a new one with the \"Models\" permission (steps in Settings).")
-	case 429:
-		return "", errors.New("You reached GitHub's free limit for now. Try again later (or tomorrow), or pick a smaller model.")
+	if firstCode == 0 && netFails > 0 {
+		return "", errors.New("Couldn't reach GitHub's AI. Check your internet.")
+	}
+	switch firstCode {
+	case 403:
+		return "", errors.New("GitHub refused (403): the token needs the \"Models\" permission (Read-only). " + firstMsg)
 	case 400, 404, 422:
-		return "", fmt.Errorf("GitHub doesn't know the model %q. Try %s. %s", model, ghDefaultModel, ans)
+		return "", fmt.Errorf("GitHub doesn't accept the model %q (%d). Try %s. %s", model, firstCode, ghDefaultModel, firstMsg)
+	case -1:
+		return "", errors.New("GitHub AI: " + firstMsg)
 	}
-	return "", fmt.Errorf("GitHub AI error (%d). %s", code, ans)
+	return "", fmt.Errorf("GitHub AI error (%d). %s", firstCode, firstMsg)
+}
+
+func snippet(b []byte) string {
+	s := strings.TrimSpace(string(b))
+	if s == "" {
+		return "(no details)"
+	}
+	if len(s) > 240 {
+		s = s[:240] + "…"
+	}
+	return s
 }

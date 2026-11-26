@@ -35,7 +35,7 @@ var (
 	quitApp         = func() {}
 )
 
-const appVersion = "4.2"
+const appVersion = "4.3"
 
 type Server struct {
 	Port   int
