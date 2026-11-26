@@ -132,10 +132,11 @@ function hello() {
     <button data-q="Explain what's on my screen and help me understand it." data-look="1">👁 Explain my screen</button>
     ${USE === "work" ? "" : `<button data-q="Make me 5 practice questions about my next class's subject.">📝 Quiz me</button>`}
     <button data-voice="1">🎙 Talk to me</button>
-    ${hasKey ? "" : `<br><br><span class="warn">No AI connected: I can answer the basics (next class, homework, weather, meetings, timers). Connect an AI in ⚙ Settings for everything else.</span>`}</div>`;
+    ${hasKey ? "" : `<br><br><span class="warn">No AI connected yet: I can answer the basics (next class, homework, weather, meetings, timers).</span><br><button class="primary" id="ghOn" style="margin-top:8px">⭐ Turn on the free GitHub AI</button>`}</div>`;
   $("log").querySelectorAll("[data-q]").forEach(b => b.onclick = () => { $("text").value = b.dataset.q; if (b.dataset.look) $("look").checked = true; send(); });
   $("log").querySelector("[data-voice]").onclick = openVoice;
   $("helloBot").onclick = openVoice;
+  $("ghOn") && ($("ghOn").onclick = () => api("/api/open-settings", { method: "POST", body: JSON.stringify({ hash: "#ai-github" }) }));
 }
 function render(items) {
   const log = $("log");

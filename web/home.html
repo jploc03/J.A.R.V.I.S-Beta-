@@ -231,6 +231,7 @@ function render() {
     <div class="d">${Math.round(w.min)}° / ${Math.round(w.max)}° · rain ${w.rain}%<br>Tomorrow ${WX(w.tomCode)} ${Math.round(w.tomMax)}° · rain ${w.tomRain}%</div>` : `<div class="d">Weather loading…</div>`;
 
   let h = "";
+  if (!S.hasKey) h += `<div class="banner hud"><span>⭐ <b>Turn on the free GitHub AI</b> so J.A.R.V.I.S. can answer anything (takes 2 minutes).</span><button data-set="#ai-github" class="primary">Turn on</button></div>`;
   if (S.update && S.update.ready) h += `<div class="banner hud"><span>⬆ <b>J.A.R.V.I.S. ${esc(S.update.version)}</b> is ready to install.</span><button id="doUpdate" class="primary">Update now</button></div>`;
   const school = S.use !== "work";
   if (!school) h += meetingsCard(now, true);

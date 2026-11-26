@@ -1,6 +1,6 @@
 {
-  "version": "4.1",
-  "notes": "Updates now come straight from this repository. Robot Room with Realistic and Cute styles.",
+  "version": "4.2",
+  "notes": "The free GitHub AI is now the default and easy to turn on (Turn on button, Create my token button, token field in the tutorial).",
   "windows": "Jarvis.exe",
   "mac": "Jarvis-mac.zip"
 }

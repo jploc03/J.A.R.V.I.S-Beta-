@@ -126,6 +126,7 @@ code{background:rgba(var(--p2-rgb),.6);padding:1px 6px;border:1px solid var(--li
     </div>
   </div>
   <div id="pGitHub" hidden>
+    <div class="tools"><button class="primary" id="mkToken">🔑 Create my GitHub token</button></div>
     <ol>
       <li>Log in to <a href="#" data-u2="https://github.com">github.com</a>.</li>
       <li>Open <a href="#" data-u2="https://github.com/settings/personal-access-tokens/new">New fine-grained token</a> (Settings → Developer settings → Personal access tokens → Fine-grained tokens).</li>
@@ -376,6 +377,7 @@ let provider = "claude";
 function setProv(p) { provider = p; document.querySelectorAll(".pv").forEach(x => x.classList.toggle("sel", x.dataset.p === p));
   $("pClaude").hidden = p !== "claude"; $("pOllama").hidden = p !== "ollama"; $("pGitHub").hidden = p !== "github"; }
 document.querySelectorAll("[data-u2]").forEach(a => a.onclick = e => { e.preventDefault(); openUrl(a.dataset.u2); });
+$("mkToken").onclick = () => openUrl("https://github.com/settings/personal-access-tokens/new?name=Jarvis&description=J.A.R.V.I.S.%20free%20AI%20(GitHub%20Models)");
 $("testGh").onclick = async () => {
   $("ghMsg").textContent = "Asking GitHub…";
   const r = await api("/api/test-github", { method: "POST", body: JSON.stringify({ token: $("ghToken").value, model: $("ghModel").value }) }).catch(e => ({ ok: false, message: e.message }));
@@ -459,5 +461,6 @@ $("cancel").onclick = () => { if (!dirty || confirm("Close without saving?")) wi
 document.addEventListener("input", () => dirty = true);
 document.addEventListener("keydown", e => { if (e.ctrlKey && e.key.toLowerCase() === "s") { e.preventDefault(); save(); } });
 load().catch(e => msg(e.message, "err"));
-if (location.hash) setTimeout(() => document.querySelector(location.hash)?.scrollIntoView(), 300);
+if (location.hash === "#ai-github") setTimeout(() => { setProv("github"); dirty = true; $("ai").scrollIntoView(); $("ghToken").focus(); }, 600);
+else if (location.hash) setTimeout(() => document.querySelector(location.hash)?.scrollIntoView(), 300);
 </script></body></html>

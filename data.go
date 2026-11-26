@@ -100,6 +100,9 @@ func (c *Config) normalize() {
 	if c.Use != "work" {
 		c.Use = "school"
 	}
+	if c.AIProvider == "" {
+		c.AIProvider = "github" // padrão: IA grátis do GitHub
+	}
 	if c.AIProvider != "ollama" && c.AIProvider != "none" && c.AIProvider != "github" {
 		c.AIProvider = "claude"
 	}

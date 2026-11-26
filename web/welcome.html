@@ -110,9 +110,13 @@ h2{font:700 24px var(--hud);letter-spacing:3px;color:#fff;text-shadow:var(--glow
     <h2>My brain</h2>
     <div class="lead">How should I think? (You can change it later in Settings.)</div>
     <div class="choices">
-      <div class="ch hud" data-ai="github"><span class="ic">⭐</span><div><b>GitHub AI</b><span>Free & strong · needs a GitHub token (Settings)</span></div></div>
+      <div class="ch hud" data-ai="github"><span class="ic">⭐</span><div><b>GitHub AI (free)</b><span>Recommended · strong · uses your GitHub account</span></div></div>
       <div class="ch hud" data-ai="claude"><span class="ic">🧠</span><div><b>Claude</b><span>Smartest · can use the screen · paid key</span></div></div>
       <div class="ch hud" data-ai="none"><span class="ic">⚡</span><div><b>Basics only</b><span>Free, offline: classes, homework, timer…</span></div></div>
+    </div>
+    <div class="form" id="ghBox" hidden>
+      <label>Your GitHub token <span class="muted">— click the button, then on GitHub: Permissions → Account permissions → <b>Models: Read-only</b> → Generate token → copy</span></label>
+      <div style="display:flex;gap:8px"><button class="primary" id="mkToken">🔑 Create my token</button><input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off"></div>
     </div>
     <div class="nav"><button data-back>Back</button><button class="primary" data-next>Continue</button></div>
   </div>
@@ -180,7 +184,8 @@ function drawThemes() {
 document.querySelectorAll("[data-use]").forEach(el => el.onclick = () => {
   use = el.dataset.use; document.querySelectorAll("[data-use]").forEach(x => x.classList.toggle("sel", x === el)); $("useNext").disabled = false;
 });
-document.querySelectorAll("[data-ai]").forEach(el => el.onclick = () => { ai = el.dataset.ai; document.querySelectorAll("[data-ai]").forEach(x => x.classList.toggle("sel", x === el)); });
+document.querySelectorAll("[data-ai]").forEach(el => el.onclick = () => { ai = el.dataset.ai; document.querySelectorAll("[data-ai]").forEach(x => x.classList.toggle("sel", x === el)); $("ghBox").hidden = ai !== "github"; });
+$("mkToken").onclick = () => api("/api/open-url", { method: "POST", body: JSON.stringify({ url: "https://github.com/settings/personal-access-tokens/new?name=Jarvis&description=J.A.R.V.I.S.%20free%20AI%20(GitHub%20Models)" }) });
 document.querySelectorAll("[data-u]").forEach(a => a.onclick = e => { e.preventDefault(); api("/api/open-url", { method: "POST", body: JSON.stringify({ url: a.dataset.u }) }); });
 
 function parseClasses(text) {
@@ -203,6 +208,7 @@ async function finish(skipAll) {
   if (!skipAll) {
     c.userName = $("name").value.trim(); c.theme = theme; c.use = use || "school";
     if (ai) c.aiProvider = ai;
+    if (ai === "github" && $("ghToken").value.trim()) c.githubToken = $("ghToken").value.trim();
     if (use === "school") {
       if ($("canvasUrl").value.trim()) c.canvasUrl = $("canvasUrl").value.trim();
       c.canvasToken = $("canvasToken").value.trim();
