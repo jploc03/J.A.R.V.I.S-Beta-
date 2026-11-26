@@ -47,8 +47,7 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/vnd.github+json")
 		req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-		cl := &http.Client{Timeout: 3 * time.Minute}
-		resp, err := cl.Do(req)
+		resp, err := ghPost(req, body)
 		if err != nil {
 			return "", 0, err
 		}
@@ -82,8 +81,11 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 				} `json:"message"`
 			} `json:"choices"`
 		}
+		if t := sseText(b); t != "" {
+			return t, 200, nil
+		}
 		if err := json.Unmarshal(b, &r); err != nil || len(r.Choices) == 0 {
-			return "Unexpected reply: " + snippet(b), -1, nil
+			return fmt.Sprintf("unexpected reply %q (%s)", snippet(b), resp.Header.Get("Content-Type")), -1, nil
 		}
 		txt := ""
 		switch c := r.Choices[0].Message.Content.(type) {
@@ -100,7 +102,7 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 		}
 		txt = strings.TrimSpace(txt)
 		if txt == "" {
-			return "Empty reply: " + snippet(b), -1, nil
+			return "empty reply: " + snippet(b), -1, nil
 		}
 		return txt, 200, nil
 	}
@@ -124,11 +126,20 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 	var firstMsg string
 	firstCode := 0
 	netFails := 0
+	var log []string
 	for _, a := range plan {
 		ans, code, err := try(a.url, a.model)
+		where := "new"
+		if a.url == ghLegacyEndpoint {
+			where = "old"
+		}
 		if err != nil {
 			netFails++
+			log = append(log, fmt.Sprintf("%s %s: %v", where, a.model, err))
 			continue
+		}
+		if code != 200 {
+			log = append(log, fmt.Sprintf("%s %s: %d %s", where, a.model, code, ans))
 		}
 		if code == 200 {
 			return ans, nil
@@ -151,10 +162,63 @@ func githubChat(token, model string, msgs []ollamaMsg) (string, error) {
 		return "", errors.New("GitHub refused (403): the token needs the \"Models\" permission (Read-only). " + firstMsg)
 	case 400, 404, 422:
 		return "", fmt.Errorf("GitHub doesn't accept the model %q (%d). Try %s. %s", model, firstCode, ghDefaultModel, firstMsg)
-	case -1:
-		return "", errors.New("GitHub AI: " + firstMsg)
 	}
-	return "", fmt.Errorf("GitHub AI error (%d). %s", firstCode, firstMsg)
+	return "", fmt.Errorf("GitHub AI didn't answer. Details: %s", strings.Join(log, " | "))
+}
+
+// ghPost envia o POST e segue redirecionamentos mantendo POST, corpo e token
+// (o Go normal troca POST por GET num 301/302 e a pergunta se perde).
+func ghPost(req *http.Request, body []byte) (*http.Response, error) {
+	cl := &http.Client{Timeout: 3 * time.Minute, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	for hop := 0; ; hop++ {
+		resp, err := cl.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		loc := resp.Header.Get("Location")
+		if resp.StatusCode < 300 || resp.StatusCode > 399 || loc == "" || hop >= 4 {
+			return resp, nil
+		}
+		resp.Body.Close()
+		u, err := req.URL.Parse(loc)
+		if err != nil || u.Scheme != "https" {
+			return nil, fmt.Errorf("bad redirect to %q", loc)
+		}
+		nr, _ := http.NewRequest("POST", u.String(), bytes.NewReader(body))
+		for k, v := range req.Header {
+			nr.Header[k] = v
+		}
+		h := u.Hostname()
+		if !(strings.HasSuffix(h, ".github.ai") || h == "github.ai" || strings.HasSuffix(h, ".github.com") || strings.HasSuffix(h, ".azure.com")) {
+			nr.Header.Del("Authorization")
+		}
+		req = nr
+	}
+}
+
+// sseText junta o texto se a resposta vier em "streaming" (linhas data: {...}).
+func sseText(b []byte) string {
+	if !bytes.HasPrefix(bytes.TrimSpace(b), []byte("data:")) {
+		return ""
+	}
+	var sb strings.Builder
+	for _, ln := range strings.Split(string(b), "\n") {
+		ln = strings.TrimSpace(ln)
+		if !strings.HasPrefix(ln, "data:") {
+			continue
+		}
+		var c struct {
+			Choices []struct {
+				Delta struct {
+					Content string `json:"content"`
+				} `json:"delta"`
+			} `json:"choices"`
+		}
+		if json.Unmarshal([]byte(strings.TrimSpace(ln[5:])), &c) == nil && len(c.Choices) > 0 {
+			sb.WriteString(c.Choices[0].Delta.Content)
+		}
+	}
+	return strings.TrimSpace(sb.String())
 }
 
 func snippet(b []byte) string {

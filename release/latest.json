@@ -1,6 +1,6 @@
 {
-  "version": "4.3",
-  "notes": "Fixed the GitHub AI error: Jarvis now tries GitHub's other address and other models automatically, and shows the real error if it still fails.",
+  "version": "4.4",
+  "notes": "GitHub AI fix: Jarvis now follows GitHub's redirects correctly and shows what each try got back if it still fails.",
   "windows": "Jarvis.exe",
   "mac": "Jarvis-mac.zip"
 }

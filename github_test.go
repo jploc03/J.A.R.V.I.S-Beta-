@@ -33,3 +33,30 @@ func TestGitHubFallback(t *testing.T) {
 		t.Fatalf("err=%v", err)
 	}
 }
+
+func TestGitHubRedirectKeepsPost(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/new":
+			http.Redirect(w, r, "/moved", http.StatusFound)
+		case "/moved":
+			if r.Method != "POST" {
+				w.Write([]byte("OK"))
+				return
+			}
+			w.Write([]byte("data: {\"choices\":[{\"delta\":{\"content\":\"Jarvis \"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"online.\"}}]}\n\ndata: [DONE]\n"))
+		default:
+			w.WriteHeader(500)
+		}
+	}))
+	defer srv.Close()
+	old := http.DefaultTransport
+	http.DefaultTransport = srv.Client().Transport
+	defer func() { http.DefaultTransport = old }()
+	ghEndpoint, ghLegacyEndpoint = srv.URL+"/new", srv.URL+"/old"
+	ans, err := githubChat("tok", "", []ollamaMsg{{Role: "user", Content: "hi"}})
+	if err != nil || ans != "Jarvis online." {
+		t.Fatalf("ans=%q err=%v", ans, err)
+	}
+}
