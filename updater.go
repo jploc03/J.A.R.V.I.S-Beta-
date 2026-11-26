@@ -45,10 +45,18 @@ func currentUpdate() *UpdateInfo {
 	return &c
 }
 
-// checkUpdate pergunta ao GitHub se há versão nova.
+// checkUpdate pergunta ao GitHub se há versão nova (Releases ou a pasta release/ do repositório).
 func checkUpdate() {
-	req, _ := http.NewRequest("GET", "https://api.github.com/repos/"+updateRepo+"/releases/latest", nil)
-	req.Header.Set("Accept", "application/vnd.github+json")
+	if checkReleases() {
+		return
+	}
+	checkRepoFolder()
+}
+
+// checkRepoFolder lê release/latest.json do repositório (funciona sem "Releases").
+func checkRepoFolder() {
+	base := "https://raw.githubusercontent.com/" + updateRepo + "/main/release/"
+	req, _ := http.NewRequest("GET", base+"latest.json?t="+strconv.FormatInt(time.Now().Unix(), 10), nil)
 	req.Header.Set("User-Agent", "Jarvis-School-Assistant")
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -57,6 +65,49 @@ func checkUpdate() {
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return
+	}
+	var m struct {
+		Version string `json:"version"`
+		Notes   string `json:"notes"`
+		Windows string `json:"windows"`
+		Mac     string `json:"mac"`
+	}
+	if json.NewDecoder(io.LimitReader(resp.Body, 1<<16)).Decode(&m) != nil {
+		return
+	}
+	v := strings.TrimPrefix(m.Version, "v")
+	if !newerVersion(v, appVersion) {
+		return
+	}
+	file := m.Mac
+	if strings.HasSuffix(strings.ToLower(updateAssetName), ".exe") {
+		file = m.Windows
+	}
+	if file == "" || strings.Contains(file, "..") || strings.Contains(file, "/") {
+		return
+	}
+	updMu.Lock()
+	if updInfo == nil || updInfo.Version != v {
+		updInfo = &UpdateInfo{Version: v, Notes: m.Notes, url: base + file}
+		updMu.Unlock()
+		go downloadUpdate()
+		return
+	}
+	updMu.Unlock()
+}
+
+// checkReleases usa a API de Releases do GitHub; devolve true se achou algo para tratar.
+func checkReleases() bool {
+	req, _ := http.NewRequest("GET", "https://api.github.com/repos/"+updateRepo+"/releases/latest", nil)
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("User-Agent", "Jarvis-School-Assistant")
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return false
 	}
 	var r struct {
 		Tag    string `json:"tag_name"`
@@ -67,11 +118,11 @@ func checkUpdate() {
 		} `json:"assets"`
 	}
 	if json.NewDecoder(resp.Body).Decode(&r) != nil {
-		return
+		return false
 	}
 	v := strings.TrimPrefix(strings.TrimPrefix(r.Tag, "v"), "V")
 	if !newerVersion(v, appVersion) {
-		return
+		return false
 	}
 	for _, a := range r.Assets {
 		if strings.EqualFold(a.Name, updateAssetName) {
@@ -84,12 +135,13 @@ func checkUpdate() {
 				updInfo = &UpdateInfo{Version: v, Notes: notes, url: a.URL}
 				updMu.Unlock()
 				go downloadUpdate()
-				return
+				return true
 			}
 			updMu.Unlock()
-			return
+			return true
 		}
 	}
+	return false
 }
 
 func downloadUpdate() {

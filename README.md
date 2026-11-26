@@ -15,9 +15,11 @@ A personal school (and work) assistant for **Windows** and **macOS**, inspired b
 - **Welcome tutorial**, auto-update from this repository's Releases.
 
 ## Install
-Download the latest **Release**:
-- Windows: `Jarvis.exe` → double-click (it installs/updates itself).
-- Mac: `Jarvis-mac.zip` → drag `Jarvis.app` to Applications → right-click → Open.
+Download from the [`release/`](release) folder:
+- **Windows:** [`release/Jarvis.exe`](release/Jarvis.exe) → double-click (it installs/updates itself).
+- **Mac:** [`release/Jarvis-mac.zip`](release/Jarvis-mac.zip) → drag `Jarvis.app` to Applications → right-click → Open.
+
+Installed copies update themselves from this repository.
 
 ## Build from source
 Requires Go 1.25+.
@@ -29,7 +31,9 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-s -w" -o Ja
 ```
 
 ## Releasing an update
-Create a Release with tag `vX.Y` (higher than the current version) and attach `Jarvis.exe` and `Jarvis-mac.zip`. Installed copies find it automatically.
+1. Raise `appVersion` in `server.go` and build.
+2. Put the new `Jarvis.exe` and `Jarvis-mac.zip` in `release/` and bump `version` in `release/latest.json`.
+3. Push to `main`. Installed copies find it automatically (a GitHub Release with tag `vX.Y` and the same file names also works).
 
 ## Credits
 3D: [three.js](https://threejs.org) (MIT). Fonts: Orbitron & Rajdhani (SIL OFL).
